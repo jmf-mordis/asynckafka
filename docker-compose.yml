@@ -1,0 +1,14 @@
+version: "2"
+services:
+  kafka:
+    image: spotify/kafkaproxy
+    ports:
+      - 9092:9092
+      - 2181:2181
+    environment:
+      ADVERTISED_HOST: '127.0.0.1'
+      ADVERTISED_PORT: 9092
+      CONSUMER_THREADS: 1
+      TOPICS: benchmark
+      ZK_CONNECT: kafka7zookeeper:2181/root/path
+      GROUP_ID: mymirror

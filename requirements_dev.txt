@@ -1,0 +1,4 @@
+confluent-kafka
+cython
+pytest
+pytest-asyncio
