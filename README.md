@@ -1,11 +1,14 @@
-# asyncio-kafka
+# asynckafka
 Asyncio client for Kafka written in python
 
 
+# How to install
 
-# Kafka documentation
+WIP
 
-# Protocol
-https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol
-http://kafka.apache.org/protocol.html#protocol_types
+# How to run the test
+
+WIP
+
+# How to 
 
