@@ -1,10 +1,9 @@
-import time
-
 from rdkafka cimport *
 
 
 
 cdef void dr_msg_cb (rd_kafka_t *rk, const rd_kafka_message_t *rkmessage, void *opaque):
+    # TODO callback is not working well
     err = rkmessage[0].err
     if err:
         print("Message delivery failed: ")
