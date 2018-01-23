@@ -14,7 +14,7 @@ cdef extern from "/usr/local/include/librdkafka/rdkafka.h":
     ctypedef enum rd_kafka_conf_res_t:
         RD_KAFKA_CONF_UNKNOWN = -2  # Unknown configuration name
         RD_KAFKA_CONF_INVALID = -1  # Invalid configuration value
-        RD_KAFKA_CONF_OK = 0        # Configuration okay
+        RD_KAFKA_CONF_OK = 0  # Configuration okay
 
     rd_kafka_conf_t *rd_kafka_conf_new()
 
@@ -27,10 +27,20 @@ cdef extern from "/usr/local/include/librdkafka/rdkafka.h":
 
     void rd_kafka_conf_set_dr_msg_cb(
             rd_kafka_conf_t *conf,
-            void (*dr_msg_cb) (
+            void (*dr_msg_cb)(
                     rd_kafka_t *rk,
                     const rd_kafka_message_t *rkmessage,
                     void *opaque
+            )
+    )
+
+    void rd_kafka_conf_set_log_cb(
+            rd_kafka_conf_t *conf,
+			void (*log_cb) (
+                    const rd_kafka_t *rk,
+                    int level,
+                    const char *fac,
+                    const char *buf
             )
     )
 
@@ -140,7 +150,6 @@ cdef extern from "/usr/local/include/librdkafka/rdkafka.h":
         RD_KAFKA_RESP_ERR_SECURITY_DISABLED = 54
         RD_KAFKA_RESP_ERR_OPERATION_NOT_ATTEMPTED = 55
 
-
     ctypedef struct rd_kafka_message_t:
         rd_kafka_resp_err_t err
         rd_kafka_topic_t *rkt
@@ -151,7 +160,6 @@ cdef extern from "/usr/local/include/librdkafka/rdkafka.h":
         size_t  key_len
         int64_t offset
         void  *_private
-
 
     rd_kafka_t *rd_kafka_new(
             rd_kafka_type_t type,
@@ -166,6 +174,9 @@ cdef extern from "/usr/local/include/librdkafka/rdkafka.h":
             rd_kafka_topic_conf_t *conf
     );
 
+    # Returns the topic name.
+    const char *rd_kafka_topic_name(const rd_kafka_topic_t *rkt)
+
     int rd_kafka_produce(
             rd_kafka_topic_t *rkt, int32_t partition,
             int msgflags,
@@ -179,4 +190,65 @@ cdef extern from "/usr/local/include/librdkafka/rdkafka.h":
     cdef int _RD_KAFKA_MSG_F_BLOCK "RD_KAFKA_MSG_F_BLOCK"
 
     cdef int _RD_KAFKA_PARTITION_UA "RD_KAFKA_PARTITION_UA"
+
+    rd_kafka_assign(rd_kafka_t *rk, const rd_kafka_topic_partition_list_t *partitions)
+
+    ctypedef struct rd_kafka_topic_partition_list_t:
+        int cnt  # Current number of elements
+        int size  # Current allocated size
+        rd_kafka_topic_partition_t *elems  # Element array[]
+
+    ctypedef struct rd_kafka_topic_partition_t:
+        char        *topic  # Topic name
+        int32_t      partition  # Partition
+        int64_t        offset  # Offset
+        void        *metadata  # Metadata
+        size_t       metadata_size  # Metadata size
+        void        *opaque  # Application opaque
+        rd_kafka_resp_err_t err  # Error code, depending on use
+        void       *_private  # INTERNAL USE ONLY, INITIALIZE TO ZERO, DO NOT TOUCH
+
+    # Returns a human readable representation of a kafka error.
+    const char *rd_kafka_err2str(rd_kafka_resp_err_t err)
+
+    rd_kafka_topic_conf_t *rd_kafka_topic_conf_new()
+
+    rd_kafka_conf_res_t rd_kafka_topic_conf_set(
+            rd_kafka_topic_conf_t *conf,
+			const char *name,
+			const char *value,
+			char *errstr,
+            size_t errstr_size
+    )
+
+    ctypedef enum rd_kafka_conf_res_t:
+        RD_KAFKA_CONF_UNKNOWN = -2  #Unknown configuration name
+        RD_KAFKA_CONF_INVALID = -1  #Invalid configuration value
+        RD_KAFKA_CONF_OK = 0        #Configuration okay
+
+    void rd_kafka_conf_set_rebalance_cb (
+            rd_kafka_conf_t *conf,
+            void (*rebalance_cb) (
+                    rd_kafka_t *rk,
+                    rd_kafka_resp_err_t err,
+                    rd_kafka_topic_partition_list_t *partitions,
+                    void *opaque
+            )
+    )
+
+    void rd_kafka_conf_set_default_topic_conf (
+            rd_kafka_conf_t *conf,
+            rd_kafka_topic_conf_t *tconf
+    )
+
+    int rd_kafka_brokers_add(rd_kafka_t *rk, const char *brokerlist)
+
+    rd_kafka_resp_err_t rd_kafka_poll_set_consumer (rd_kafka_t *rk)
+
+    rd_kafka_topic_partition_list_t *rd_kafka_topic_partition_list_new(int size)
+    rd_kafka_topic_partition_list_add(rd_kafka_topic_partition_list_t *rktparlist, const char *topic, int32_t partition)
+
+    rd_kafka_message_t *rd_kafka_consumer_poll(rd_kafka_t *rk, int timeout_ms)
+
+    void rd_kafka_message_destroy(rd_kafka_message_t *rkmessage)
 
