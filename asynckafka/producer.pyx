@@ -1,7 +1,6 @@
 from rdkafka cimport *
 
 
-
 cdef void dr_msg_cb (rd_kafka_t *rk, const rd_kafka_message_t *rkmessage, void *opaque):
     # TODO callback is not working well
     err = rkmessage[0].err
@@ -48,12 +47,13 @@ cdef class Producer:
             exit(1)
         print("initialized kafka topic")
 
-    def produce(self, message: bytes):
-        cdef char *test_message = message
+    def produce(self, message: str):
+        cdef bytes message_bytes = message.encode()
+        cdef char *message_ptr = message_bytes
         resp = rd_kafka_produce(
             self.kafka_topic,
             _RD_KAFKA_PARTITION_UA, _RD_KAFKA_MSG_F_BLOCK,
-            &test_message, sizeof(test_message),
+            message_ptr, len(message_bytes),
             NULL, 0,
             NULL
         )

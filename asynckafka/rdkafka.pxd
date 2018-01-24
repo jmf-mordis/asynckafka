@@ -254,3 +254,4 @@ cdef extern from "/usr/local/include/librdkafka/rdkafka.h":
 
     void rd_kafka_message_destroy(rd_kafka_message_t *rkmessage)
 
+    rd_kafka_resp_err_t rd_kafka_subscribe (rd_kafka_t *rk, const rd_kafka_topic_partition_list_t *topics)
