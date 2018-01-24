@@ -191,7 +191,7 @@ cdef extern from "/usr/local/include/librdkafka/rdkafka.h":
 
     cdef int _RD_KAFKA_PARTITION_UA "RD_KAFKA_PARTITION_UA"
 
-    rd_kafka_assign(rd_kafka_t *rk, const rd_kafka_topic_partition_list_t *partitions)
+    rd_kafka_resp_err_t rd_kafka_assign(rd_kafka_t *rk, const rd_kafka_topic_partition_list_t *partitions)
 
     ctypedef struct rd_kafka_topic_partition_list_t:
         int cnt  # Current number of elements
@@ -210,6 +210,8 @@ cdef extern from "/usr/local/include/librdkafka/rdkafka.h":
 
     # Returns a human readable representation of a kafka error.
     const char *rd_kafka_err2str(rd_kafka_resp_err_t err)
+
+    const char *rd_kafka_message_errstr(const rd_kafka_message_t *rkmessage)
 
     rd_kafka_topic_conf_t *rd_kafka_topic_conf_new()
 
@@ -246,7 +248,7 @@ cdef extern from "/usr/local/include/librdkafka/rdkafka.h":
     rd_kafka_resp_err_t rd_kafka_poll_set_consumer (rd_kafka_t *rk)
 
     rd_kafka_topic_partition_list_t *rd_kafka_topic_partition_list_new(int size)
-    rd_kafka_topic_partition_list_add(rd_kafka_topic_partition_list_t *rktparlist, const char *topic, int32_t partition)
+    rd_kafka_topic_partition_t *rd_kafka_topic_partition_list_add(rd_kafka_topic_partition_list_t *rktparlist, const char *topic, int32_t partition)
 
     rd_kafka_message_t *rd_kafka_consumer_poll(rd_kafka_t *rk, int timeout_ms)
 
