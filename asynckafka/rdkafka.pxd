@@ -1,6 +1,6 @@
 from libc.stdint cimport int32_t, int64_t
 
-cdef extern from "/usr/local/include/librdkafka/rdkafka.h":
+cdef extern from "/usr/local/include/librdkafka/rdkafka.h" nogil:
     ctypedef struct rd_kafka_t
     ctypedef struct rd_kafka_topic_t
     ctypedef struct rd_kafka_conf_t
