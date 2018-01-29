@@ -1,35 +1,20 @@
 cimport rdkafka
+import asyncio
+from libc cimport stdio
 
 from libc.stdint cimport int32_t, int64_t
+from threading import Thread
 
 cdef int wait_eof = 0
-
 
 # Kafka logger callback (optional)
 cdef void cb_logger(const rdkafka.rd_kafka_t *rk, int level, const char *fac, const char *buf):
     print("logger callback. TODO: call to python logging")
 
 
-cdef void cb_msg_consume(rdkafka.rd_kafka_message_t *rkmessage):
-    cdef char *payload
-    if rkmessage.err:
-        if rkmessage.err == rdkafka.RD_KAFKA_RESP_ERR__PARTITION_EOF:
-            print("Partition EOF")
-        elif rkmessage.rkt:
-            print("Consume error for topic blabla")
-        else:
-            print("Consuming error")
-            print(rdkafka.rd_kafka_err2str(rkmessage.err))
-            print(rdkafka.rd_kafka_message_errstr(rkmessage))
-    else:
-        # payload = rkmessage[0].payload
-        payload = <char*>rkmessage.payload
-        print("Message payload: ", payload)
-        # TODO open asyncio task
-
-
-cdef void cb_rebalance(rdkafka.rd_kafka_t *rk, rdkafka.rd_kafka_resp_err_t err,
-                       rdkafka.rd_kafka_topic_partition_list_t *partitions, void *opaque):
+cdef void cb_rebalance(
+        rdkafka.rd_kafka_t *rk, rdkafka.rd_kafka_resp_err_t err,
+        rdkafka.rd_kafka_topic_partition_list_t *partitions, void *opaque):
     print("%% Consumer group rebalanced: ")
     if err == rdkafka.RD_KAFKA_RESP_ERR__ASSIGN_PARTITIONS:
         print("Partition assigned: ")
@@ -40,6 +25,20 @@ cdef void cb_rebalance(rdkafka.rd_kafka_t *rk, rdkafka.rd_kafka_resp_err_t err,
     else:
         print("Error: ", rdkafka.rd_kafka_err2str(err))
         rdkafka.rd_kafka_assign(rk, NULL)
+
+
+class PythonConsumer:
+
+    def __init__(self, brokers: str, topic: str, group_id: str,
+                 message_handler, loop):
+        self.cython_consumer = Consumer(brokers, topic, group_id)
+        self.loop = loop if loop else asyncio.get_event_loop()
+        self.message_handler = message_handler
+        self.thread = None
+
+    def consume_messages(self):
+        self.thread = Thread(target=self.cython_consumer.consume_messages_in_thread, args=(self.message_handler, self.loop))
+        self.thread.start()
 
 
 cdef class Consumer:
@@ -79,7 +78,8 @@ cdef class Consumer:
             print("Wrong response in consumer group")
             exit(1)     # TODO launch exception
         topic_conf_resp = rdkafka.rd_kafka_topic_conf_set(
-            self.topic_conf, "offset.store.method", "broker", self.errstr, sizeof(self.errstr)
+            self.topic_conf, "offset.store.method", "broker", self.errstr,
+            sizeof(self.errstr)
         )
         if topic_conf_resp != rdkafka.RD_KAFKA_CONF_OK:
             print("Wrong response in consumer group")
@@ -125,12 +125,32 @@ cdef class Consumer:
             print(rdkafka.rd_kafka_err2str(err))
             exit(1)     # TODO launch exception
 
-    def consume_messages(self):
+    cpdef consume_messages_in_thread(self, message_handler, loop):
         cdef rdkafka.rd_kafka_message_t *rkmessage
-        print(self.errstr)
+        cdef rdkafka.rd_kafka_t *kafka_consumer
+        stdio.printf("in main thread\n")
         while True:
             rkmessage = rdkafka.rd_kafka_consumer_poll(self.kafka_consumer, 1000)
+            stdio.printf("asdfdsfs\n")
             if rkmessage:
-                cb_msg_consume(rkmessage)
-                rdkafka.rd_kafka_message_destroy(rkmessage)
+                self.cb_msg_consume(rkmessage, message_handler, loop)
+                # rdkafka.rd_kafka_message_destroy(rkmessage) segmentation fault
+
+    cdef void cb_msg_consume(self, rdkafka.rd_kafka_message_t *rkmessage, message_handler,  loop):
+        cdef char *payload
+        stdio.printf("consumed message in cthread")
+        if rkmessage.err:
+            if rkmessage.err == rdkafka.RD_KAFKA_RESP_ERR__PARTITION_EOF:
+                print("Partition EOF")
+            elif rkmessage.rkt:
+                print("Consume error for topic blabla")
+            else:
+                print("Consuming error")
+                print(rdkafka.rd_kafka_err2str(rkmessage.err))
+                print(rdkafka.rd_kafka_message_errstr(rkmessage))
+        else:
+            payload = <char*>rkmessage.payload
+            print("Message payload: ", payload)
+            coro = message_handler(payload)
+            asyncio.run_coroutine_threadsafe(coro, loop=loop)
 
