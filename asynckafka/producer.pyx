@@ -27,7 +27,9 @@ cdef class Producer:
         brokers_bytes = brokers.encode()
         self.conf = rd_kafka_conf_new()
         rd_kafka_conf_set_dr_msg_cb(self.conf, dr_msg_cb)
-        conf_resp = rd_kafka_conf_set(self.conf, "bootstrap.servers", brokers_bytes, self.errstr, sizeof(self.errstr))
+        conf_resp = rd_kafka_conf_set(self.conf, "bootstrap.servers",
+                                      brokers_bytes, self.errstr,
+                                      sizeof(self.errstr))
         if conf_resp != 0:
             print("Wrong response from settings")
             exit(1)

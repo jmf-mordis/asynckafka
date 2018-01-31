@@ -14,6 +14,6 @@ setup(
             "asynckafka.consumer",
             ["asynckafka/consumer.pyx"],
             libraries=["rdkafka"]
-        )
+        ),
     ])
 )

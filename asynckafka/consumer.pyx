@@ -1,11 +1,13 @@
+from typing import Callable, Coroutine
+
 cimport rdkafka
 import asyncio
 from libc cimport stdio
 
 from libc.stdint cimport int32_t, int64_t
-from threading import Thread
-
+from threading import Thread, Event
 cdef int wait_eof = 0
+
 
 # Kafka logger callback (optional)
 cdef void cb_logger(const rdkafka.rd_kafka_t *rk, int level, const char *fac, const char *buf):
@@ -27,21 +29,41 @@ cdef void cb_rebalance(
         rdkafka.rd_kafka_assign(rk, NULL)
 
 
-class PythonConsumer:
+class Consumer:
 
-    def __init__(self, brokers: str, topic: str, group_id: str,
-                 message_handler, loop):
-        self.cython_consumer = Consumer(brokers, topic, group_id)
+    required_init_kwargs = {'topic'}
+
+    def __init__(self, topic, message_handler=None, error_callback=None,
+                 loop=None, **kwargs):
+        self._config = self._config_replace_low_bars_with_points(kwargs)
+        self._config['topic'] = topic
+        self._rdkafka_consumer = RdkafkaConsumer(**kwargs)
         self.loop = loop if loop else asyncio.get_event_loop()
-        self.message_handler = message_handler
-        self.thread = None
+        self.message_handler = message_handler if message_handler else None
+        self._thread = None
+        self._thread_stop_event = Event()
 
-    def consume_messages(self):
-        self.thread = Thread(target=self.cython_consumer.consume_messages_in_thread, args=(self.message_handler, self.loop))
-        self.thread.start()
+    @staticmethod
+    def _config_replace_low_bars_with_points(config: dict) -> dict:
+        return {key.replace("_", "."): value for key, value in config.items()}
+
+    def start(self) -> None:
+        if not self.message_handler:
+            raise Exception("Message handler is needed before the start")
+        self._open_thread()
+
+    def close(self) -> None:
+        self._thread_stop_event.set()
+
+    def _open_thread(self) -> None:
+        self._thread = Thread(
+            target=self.cython_consumer.consume_messages_in_thread,
+            args=(self.message_handler, self.loop)
+        )
+        self._thread.start()
 
 
-cdef class Consumer:
+cdef class RdkafkaConsumer:
 
     cdef rdkafka.rd_kafka_t *kafka_consumer
     cdef rdkafka.rd_kafka_topic_t *kafka_topic
@@ -53,10 +75,10 @@ cdef class Consumer:
     cdef bytes topic
     cdef bytes group_id
 
-    def __cinit__(self, brokers: str, topic: str, group_id: str):
+    def __cinit__(self, brokers, topic, group_id=None):
         self.brokers = brokers.encode()
         self.topic = topic.encode()
-        self.group_id = group_id.encode()
+        self.group_id = group_id.encode() if group_id else None
         self._init_config()
         self._init_consumer_group()
         self._init_consumer()
