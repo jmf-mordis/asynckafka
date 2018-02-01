@@ -19,7 +19,7 @@ class ConfluentBenchmark(Benchmark):
             elif msg.error().code() != KafkaError._PARTITION_EOF:
                 print("ERROR!!")
                 break
-        c.close()
+        c.stop()
 
         reporter_task.cancel()
         await reporter_task

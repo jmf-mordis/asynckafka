@@ -6,6 +6,9 @@ from libc cimport stdio
 
 from libc.stdint cimport int32_t, int64_t
 from threading import Thread, Event
+
+from asynckafka.Exceptions import InvalidSetting, UnknownSetting
+
 cdef int wait_eof = 0
 
 
@@ -31,20 +34,23 @@ cdef void cb_rebalance(
 
 class Consumer:
 
-    required_init_kwargs = {'topic'}
-
-    def __init__(self, topic, message_handler=None, error_callback=None,
-                 loop=None, **kwargs):
-        self._config = self._config_replace_low_bars_with_points(kwargs)
-        self._config['topic'] = topic
-        self._rdkafka_consumer = RdkafkaConsumer(**kwargs)
+    def __init__(self, brokers, topic, message_handler=None, error_callback=None,
+                 loop=None, consumer_settings=None, topic_settings=None):
+        self._consumer_settings = self._parse_settings(consumer_settings) \
+            if consumer_settings else {}
+        self._topic_settings = self._parse_settings(topic_settings) \
+            if topic_settings else {}
+        self._rdkafka_consumer = RdkafkaConsumer(
+            brokers=brokers, topic=topic, consumer_settings=self._consumer_settings,
+            topic_settings=self._topic_settings)
         self.loop = loop if loop else asyncio.get_event_loop()
         self.message_handler = message_handler if message_handler else None
         self._thread = None
         self._thread_stop_event = Event()
+        self._thread_stopped_event = Event()
 
     @staticmethod
-    def _config_replace_low_bars_with_points(config: dict) -> dict:
+    def _parse_settings(config: dict) -> dict:
         return {key.replace("_", "."): value for key, value in config.items()}
 
     def start(self) -> None:
@@ -52,13 +58,19 @@ class Consumer:
             raise Exception("Message handler is needed before the start")
         self._open_thread()
 
-    def close(self) -> None:
+    def stop(self) -> None:
         self._thread_stop_event.set()
+        try:
+            self._thread_stopped_event.wait(timeout=10)
+        except TimeoutError:
+            print("Error closing thread")
+            raise
 
     def _open_thread(self) -> None:
         self._thread = Thread(
-            target=self.cython_consumer.consume_messages_in_thread,
-            args=(self.message_handler, self.loop)
+            target=self._rdkafka_consumer.thread_consume_messages,
+            args=(self.message_handler, self.loop, self._thread_stop_event,
+                  self._thread_stopped_event)
         )
         self._thread.start()
 
@@ -73,13 +85,24 @@ cdef class RdkafkaConsumer:
     cdef rdkafka.rd_kafka_topic_partition_list_t *topic_list
     cdef bytes brokers
     cdef bytes topic
-    cdef bytes group_id
+    cdef dict consumer_settings
+    cdef dict topic_settings
 
-    def __cinit__(self, brokers, topic, group_id=None):
+    def __cinit__(self, brokers, topic, consumer_settings, topic_settings):
         self.brokers = brokers.encode()
         self.topic = topic.encode()
-        self.group_id = group_id.encode() if group_id else None
+        self.consumer_settings = {
+            key.encode(): value.encode()
+            for key, value in consumer_settings.items()
+        }
+        if 'group.id' in consumer_settings:
+            topic_settings["offset.store.method"] = "broker"
+        self.topic_settings = {
+            key.encode(): value.encode()
+            for key, value in topic_settings.items()
+        }
         self._init_config()
+        self._consumer_settings_to_rdkafka()
         self._init_consumer_group()
         self._init_consumer()
         self._init_topic()
@@ -91,37 +114,42 @@ cdef class RdkafkaConsumer:
         #/* Topic configuration */
         self.topic_conf = rdkafka.rd_kafka_topic_conf_new()
 
-    cdef _init_consumer_group(self):
-        cdef char *group_id = self.group_id
-        conf_resp = rdkafka.rd_kafka_conf_set(
-            self.conf, "group.id", group_id, self.errstr, sizeof(self.errstr)
-        )
-        if conf_resp != rdkafka.RD_KAFKA_CONF_OK:
-            print("Wrong response in consumer group")
-            exit(1)     # TODO launch exception
-        topic_conf_resp = rdkafka.rd_kafka_topic_conf_set(
-            self.topic_conf, "offset.store.method", "broker", self.errstr,
-            sizeof(self.errstr)
-        )
-        if topic_conf_resp != rdkafka.RD_KAFKA_CONF_OK:
-            print("Wrong response in consumer group")
-            exit(1)     # TODO launch exception
+    cpdef _consumer_settings_to_rdkafka(self):
+        for key, value in self.consumer_settings.items():
+            conf_resp = rdkafka.rd_kafka_conf_set(
+                self.conf, key, value, self.errstr, sizeof(self.errstr)
+            )
+            self.parse_conf_response(conf_resp, key, value)
 
+    cdef parse_conf_response(self, conf_respose, key, value):
+        if conf_respose == rdkafka.RD_KAFKA_CONF_OK:
+            print(f"{key} correcly configured with {value}")
+        elif conf_respose == rdkafka.RD_KAFKA_CONF_INVALID:
+            raise InvalidSetting(f"Invalid {key} setting. Value: {value}")
+        elif conf_respose == rdkafka.RD_KAFKA_CONF_UNKNOWN:
+            raise UnknownSetting(f"Unknown {value} setting. Value {value}")
+
+    cdef _init_consumer_group(self):
+        for key, value in self.topic_settings.items():
+            conf_resp = rdkafka.rd_kafka_topic_conf_set(
+                self.topic_conf, key, value, self.errstr, sizeof(self.errstr)
+            )
+            self.parse_conf_response(conf_resp, key, value)
         # Set default topic config for pattern-matched topics. */
         rdkafka.rd_kafka_conf_set_default_topic_conf(self.conf, self.topic_conf)
-
         # Callback called on partition assignment changes */
         rdkafka.rd_kafka_conf_set_rebalance_cb(self.conf, cb_rebalance)
 
     def _init_consumer(self):
-        self.kafka_consumer = rdkafka.rd_kafka_new(rdkafka.RD_KAFKA_CONSUMER, self.conf, self.errstr, sizeof(self.errstr))
+        self.kafka_consumer = rdkafka.rd_kafka_new(
+            rdkafka.RD_KAFKA_CONSUMER, self.conf, self.errstr, sizeof(self.errstr))
         if self.kafka_consumer == NULL:
             print("null kafka consumer pointer")
             exit(1)     # TODO launch exception
         print("Initialized kafka consumer")
 
-        cdef char *brokers = self.brokers
-        resp = rdkafka.rd_kafka_brokers_add(self.kafka_consumer, brokers)
+        cdef char *brokers_ptr = self.brokers
+        resp = rdkafka.rd_kafka_brokers_add(self.kafka_consumer, brokers_ptr)
         if resp == 0:
             print("No valid brokers")
             # TODO launch exception
@@ -137,8 +165,9 @@ cdef class RdkafkaConsumer:
         print("Initializing topics")
         self.topic_list = rdkafka.rd_kafka_topic_partition_list_new(1)
         cdef int32_t partition = -1
-        cdef char *topic = self.topic
-        rdkafka.rd_kafka_topic_partition_list_add(self.topic_list, topic, partition)
+        cdef char *topic_ptr = self.topic
+        rdkafka.rd_kafka_topic_partition_list_add(
+            self.topic_list, topic_ptr, partition)
 
     def _init_subscription(self):
         print("Initializing subscription")
@@ -147,18 +176,23 @@ cdef class RdkafkaConsumer:
             print(rdkafka.rd_kafka_err2str(err))
             exit(1)     # TODO launch exception
 
-    cpdef consume_messages_in_thread(self, message_handler, loop):
+    cpdef thread_consume_messages(
+            self, message_handler, loop, event_stop, event_stopped):
         cdef rdkafka.rd_kafka_message_t *rkmessage
         cdef rdkafka.rd_kafka_t *kafka_consumer
-        stdio.printf("in main thread\n")
-        while True:
+        print("In consumer thread")
+        while not event_stop.is_set():
             rkmessage = rdkafka.rd_kafka_consumer_poll(self.kafka_consumer, 1000)
-            stdio.printf("asdfdsfs\n")
+            print("timeout of consumer poll")
             if rkmessage:
-                self.cb_msg_consume(rkmessage, message_handler, loop)
+                self.thread_cb_msg_consume(rkmessage, message_handler, loop)
                 # rdkafka.rd_kafka_message_destroy(rkmessage) segmentation fault
+        else:
+            print("closing thread")
+            event_stopped.set()
 
-    cdef void cb_msg_consume(self, rdkafka.rd_kafka_message_t *rkmessage, message_handler,  loop):
+    cdef void thread_cb_msg_consume(
+            self, rdkafka.rd_kafka_message_t *rkmessage, message_handler, loop):
         cdef char *payload
         stdio.printf("consumed message in cthread")
         if rkmessage.err:
@@ -172,7 +206,9 @@ cdef class RdkafkaConsumer:
                 print(rdkafka.rd_kafka_message_errstr(rkmessage))
         else:
             payload = <char*>rkmessage.payload
+            topic = rdkafka.rd_kafka_topic_name(rkmessage.rkt)
             print("Message payload: ", payload)
+            print("Topic: ", topic)
             coro = message_handler(payload)
             asyncio.run_coroutine_threadsafe(coro, loop=loop)
 

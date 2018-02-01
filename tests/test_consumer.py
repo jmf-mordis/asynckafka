@@ -11,11 +11,14 @@ async def example_message_handler(message: bytes):
     ({'_': 'value'}, {'.': 'value'})
 ])
 def test_consumer_init_settings(dict_input, expected_output):
-    dict_output = Consumer._config_replace_low_bars_with_points(dict_input)
+    dict_output = Consumer._parse_settings(dict_input)
     assert dict_output == expected_output
 
 
 @pytest.mark.asyncio
 async def test_consumer_instance(event_loop):
-    Consumer(topic='test', message_handler=example_message_handler,
-             loop=event_loop)
+    Consumer(
+        brokers="127.0.0.1:9092", topic='my_topic',
+        message_handler=example_message_handler,
+        loop=event_loop, consumer_settings={'group.id': 'my_consumer_group'}
+    )

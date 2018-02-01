@@ -1,14 +1,15 @@
-from kafka import KafkaConsumer
+import asyncio
 
-# To consume latest messages and auto-commit offsets
-topic = "test"
-print(topic)
-consumer = KafkaConsumer(topic,
-                         group_id='my-group',
-                         bootstrap_servers=['localhost:9092'])
-for message in consumer:
-    # message value and key are raw bytes -- decode if necessary!
-    # e.g., for unicode: `message.value.decode('utf-8')`
-    print("%s:%d:%d: key=%s value=%s" % (message.topic, message.partition,
-                                          message.offset, message.key,
-                                          message.value.decode('utf-8')))
+from asynckafka import Consumer
+
+
+async def message_handler(message):
+    print(message)
+
+loop = asyncio.get_event_loop()
+consumer = Consumer(
+    brokers="127.0.0.1:9092", topic='my_topic', message_handler=message_handler,
+    loop=loop, consumer_settings={'group.id': 'my_consumer_group'}
+)
+consumer.start()
+loop.run_forever()
