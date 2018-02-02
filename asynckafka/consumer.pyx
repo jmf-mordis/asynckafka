@@ -75,7 +75,7 @@ class Consumer:
         self._open_thread()
 
     def stop(self) -> None:
-        self._thread_stop_event.set()
+        self._rdkafka_consumer.thread_stop_event.set()
         try:
             self._thread.join(timeout=10)
         except TimeoutError:
@@ -98,15 +98,16 @@ cdef class RdkafkaConsumer:
     cdef rdkafka.rd_kafka_conf_t *conf
     cdef rdkafka.rd_kafka_topic_conf_t *topic_conf
     cdef rdkafka.rd_kafka_topic_partition_list_t *topic_list
+
     cdef bytes brokers
     cdef bytes topic
     cdef dict consumer_settings
     cdef dict topic_settings
 
-    cdef tuple message_handler
-    cdef tuple loop
-    cdef tuple coroutine_manager
-    cdef tuple stop_event
+    cdef object message_handler
+    cdef object loop
+    cdef object thread_coroutine_semaphore
+    cdef object thread_stop_event
 
     def __cinit__(self, brokers, topic, consumer_settings, topic_settings,
                   message_handler, loop, coroutine_manager):
@@ -123,11 +124,10 @@ cdef class RdkafkaConsumer:
             for key, value in topic_settings.items()
         }
 
-        self.message_handler = tuple([message_handler])
-        self.loop = tuple([loop])
-        self.thread_coroutine_semaphore = tuple([coroutine_manager])
-        self.thread_stop_event = tuple([Event()])
-        self.thread_stopped_event = tuple([Event()])
+        self.message_handler = message_handler
+        self.loop = loop
+        self.thread_coroutine_semaphore = coroutine_manager
+        self.thread_stop_event = Event()
 
         self._init_config()
         self._consumer_settings_to_rdkafka()
@@ -148,6 +148,13 @@ cdef class RdkafkaConsumer:
                 self.conf, key, value, self.errstr, sizeof(self.errstr)
             )
             self.parse_conf_response(conf_resp, key, value)
+        for key, value in self.topic_settings.items():
+            conf_resp = rdkafka.rd_kafka_topic_conf_set(
+                self.topic_conf, key, value, self.errstr, sizeof(self.errstr)
+            )
+            self.parse_conf_response(conf_resp, key, value)
+        # Set default topic config for pattern-matched topics. */
+        rdkafka.rd_kafka_conf_set_default_topic_conf(self.conf, self.topic_conf)
 
     cdef parse_conf_response(self, conf_respose, key, value):
         if conf_respose == rdkafka.RD_KAFKA_CONF_OK:
@@ -158,13 +165,6 @@ cdef class RdkafkaConsumer:
             raise UnknownSetting(f"Unknown {value} setting. Value {value}")
 
     cdef _init_consumer_group(self):
-        for key, value in self.topic_settings.items():
-            conf_resp = rdkafka.rd_kafka_topic_conf_set(
-                self.topic_conf, key, value, self.errstr, sizeof(self.errstr)
-            )
-            self.parse_conf_response(conf_resp, key, value)
-        # Set default topic config for pattern-matched topics. */
-        rdkafka.rd_kafka_conf_set_default_topic_conf(self.conf, self.topic_conf)
         # Callback called on partition assignment changes */
         rdkafka.rd_kafka_conf_set_rebalance_cb(self.conf, cb_rebalance)
 
@@ -208,7 +208,7 @@ cdef class RdkafkaConsumer:
         cdef rdkafka.rd_kafka_message_t *rkmessage
         cdef rdkafka.rd_kafka_t *kafka_consumer
         print("In consumer thread")
-        while not self.thread_stop_event[0].is_set():
+        while not self.thread_stop_event.is_set():
             rkmessage = rdkafka.rd_kafka_consumer_poll(self.kafka_consumer, 1000)
             print("timeout of consumer poll")
             if rkmessage:
@@ -236,15 +236,14 @@ cdef class RdkafkaConsumer:
             print("Topic: ", topic)
             self.thread_open_asyncio_task(payload)
 
-
     cdef thread_open_asyncio_task(self, payload):
-        while not self.thread_stop_event[0].is_set():
+        while not self.thread_stop_event.is_set():
             try:
-                self.thread_coroutine_semaphore[0].acquire(blocking=True, timeout=1)
+                self.thread_coroutine_semaphore.acquire(blocking=True, timeout=1)
             except TimeoutError:
                 print("Coro semaphore is full.")
             else:
-                coro = self.message_handler[0](payload)
-                asyncio.run_coroutine_threadsafe(coro, loop=self.loop[0])
+                coro = self.message_handler(payload)
+                asyncio.run_coroutine_threadsafe(coro, loop=self.loop)
                 return
 
