@@ -8,7 +8,7 @@ from libc cimport stdio
 from libc.stdint cimport int32_t, int64_t
 from threading import Thread, Event, Semaphore
 
-from asynckafka.exceptions import InvalidSetting, UnknownSetting
+from asynckafka import exceptions
 
 from asynckafka import settings
 
@@ -17,23 +17,47 @@ cdef int wait_eof = 0
 logger = logging.getLogger('asynckafka')
 
 
-# Kafka logger callback (optional)
-cdef void cb_logger(const rdkafka.rd_kafka_t *rk, int level, const char *fac, const char *buf):
-    print("logger callback. TODO: call to python logging")
+cdef void cb_logger(const rdkafka.rd_kafka_t *rk, int level, const char *fac,
+                    const char *buf):
+    if level in {1, 2}:
+        logger.critical(f"{fac}:{buf}")
+    elif level == 3:
+        logger.error(f"{fac}:{buf}")
+    elif level in {4, 5}:
+        logger.info(f"{fac}:{buf}")
+    elif level in {6, 7} :
+        logger.debug(f"{fac}:{buf}")
+    else:
+        logger.critical(f"unexpected logger level {level}")
+        logger.critical(f"{fac}:{buf}")
+
+
+cdef log_partition_list(rdkafka.rd_kafka_topic_partition_list_t *partitions):
+    string = "List of partitions: "
+    for i in range(partitions.cnt):
+        topic = partitions.elems[i].topic
+        partition = partitions.elems[i].partition
+        offset = partitions.elems[i].offset
+        string += f"\nTopic: {topic}, Partition: {partition},  Offset: {offset}"
+    logger.debug(string)
 
 
 cdef void cb_rebalance(
         rdkafka.rd_kafka_t *rk, rdkafka.rd_kafka_resp_err_t err,
         rdkafka.rd_kafka_topic_partition_list_t *partitions, void *opaque):
-    print("%% Consumer group rebalanced: ")
+    # TODO wait eof mirar que es
+    logger.debug("Consumer group rebalance")
     if err == rdkafka.RD_KAFKA_RESP_ERR__ASSIGN_PARTITIONS:
-        print("Partition assigned: ")
+        logger.debug("New partitions assigned")
+        log_partition_list(partitions)
         rdkafka.rd_kafka_assign(rk, partitions)
     elif err == rdkafka.RD_KAFKA_RESP_ERR__REVOKE_PARTITIONS:
-        print("Partition revoked: ")
+        logger.debug("Revoked Partitions")
+        log_partition_list(partitions)
         rdkafka.rd_kafka_assign(rk, NULL)
     else:
-        print("Error: ", rdkafka.rd_kafka_err2str(err))
+        err_str = rdkafka.rd_kafka_err2str(err)
+        logger.error(f"Revoked partitions, error in rebalance callback: {err_str}")
         rdkafka.rd_kafka_assign(rk, NULL)
 
 
@@ -80,7 +104,7 @@ class Consumer:
         try:
             self._thread.join(timeout=10)
         except TimeoutError:
-            print("Error closing thread")
+            logger.error("Unexpected error closing consumer thread")
             raise
 
     def _open_thread(self) -> None:
@@ -157,13 +181,17 @@ cdef class RdkafkaConsumer:
         # Set default topic config for pattern-matched topics. */
         rdkafka.rd_kafka_conf_set_default_topic_conf(self.conf, self.topic_conf)
 
-    cdef parse_conf_response(self, conf_respose, key, value):
+    def parse_conf_response(self, conf_respose, key, value):
         if conf_respose == rdkafka.RD_KAFKA_CONF_OK:
-            print(f"{key} correcly configured with {value}")
+            logger.debug(f"Correctly configured {key} with value {value}")
         elif conf_respose == rdkafka.RD_KAFKA_CONF_INVALID:
-            raise InvalidSetting(f"Invalid {key} setting. Value: {value}")
+            err_str = f"Invalid {key} setting with value: {value}"
+            logger.error(err_str)
+            raise exceptions.InvalidSetting(err_str)
         elif conf_respose == rdkafka.RD_KAFKA_CONF_UNKNOWN:
-            raise UnknownSetting(f"Unknown {value} setting. Value {value}")
+            err_str = f"Unknown {value} setting with value {value}"
+            logger.error(err_str)
+            raise exceptions.UnknownSetting(err_str)
 
     cdef _init_consumer_group(self):
         # Callback called on partition assignment changes */
@@ -173,25 +201,26 @@ cdef class RdkafkaConsumer:
         self.kafka_consumer = rdkafka.rd_kafka_new(
             rdkafka.RD_KAFKA_CONSUMER, self.conf, self.errstr, sizeof(self.errstr))
         if self.kafka_consumer == NULL:
-            print("null kafka consumer pointer")
-            exit(1)     # TODO launch exception
-        print("Initialized kafka consumer")
+            err_str = "Unexpected error creating kafka consumer"
+            logger.error(err_str)
+            raise exceptions.ConsumerError(err_str)
+        logger.debug("Initialized kafka consumer")
 
         cdef char *brokers_ptr = self.brokers
         resp = rdkafka.rd_kafka_brokers_add(self.kafka_consumer, brokers_ptr)
         if resp == 0:
-            print("No valid brokers")
-            # TODO launch exception
-            exit(1)     # TODO launch exception
-        print("Added brokers")
+            err_str = f"Invalid kafka brokers: {self.brokers}"
+            logger.error(err_str)
+            raise exceptions.InvalidBrokers(err_str)
+        logger.debug("Added brokers to kafka consumer")
 
         err_poll = rdkafka.rd_kafka_poll_set_consumer(self.kafka_consumer)
         if err_poll:
-            print(rdkafka.rd_kafka_err2str(err_poll))
-            exit(1)     # TODO launch exception
+            err_str_poll = rdkafka.rd_kafka_err2str(err_poll)
+            logger.error(err_str_poll)
+            raise exceptions.ConsumerError(err_str_poll)
 
     def _init_topic(self):
-        print("Initializing topics")
         self.topic_list = rdkafka.rd_kafka_topic_partition_list_new(1)
         cdef int32_t partition = -1
         cdef char *topic_ptr = self.topic
@@ -199,11 +228,12 @@ cdef class RdkafkaConsumer:
             self.topic_list, topic_ptr, partition)
 
     def _init_subscription(self):
-        print("Initializing subscription")
         err = rdkafka.rd_kafka_subscribe(self.kafka_consumer, self.topic_list)
         if err:
-            print(rdkafka.rd_kafka_err2str(err))
-            exit(1)     # TODO launch exception
+            error_str = rdkafka.rd_kafka_err2str(err)
+            logger.error(f"Error subscribing to topic: {error_str}")
+            raise exceptions.SubscriptionError(error_str)
+        logger.debug("Subscribed to topic ")
 
     cpdef thread_consume_messages(self):
         cdef rdkafka.rd_kafka_message_t *rkmessage
@@ -215,7 +245,9 @@ cdef class RdkafkaConsumer:
                     self.kafka_consumer, 1000)
                 if rkmessage:
                     self.thread_cb_msg_consume(rkmessage)
-                    # rdkafka.rd_kafka_message_destroy(rkmessage) segmentation fault
+                    rdkafka.rd_kafka_message_destroy(rkmessage) # segmentation fault
+                else:
+                    logger.debug("thread consumer, poll timeout without messages")
             else:
                 logger.info(f"Closing consumer thread of topic {self.topic}")
                 return
@@ -223,23 +255,32 @@ cdef class RdkafkaConsumer:
             logger.error(f"Unexpected exception in consumer thread of topic "
                          f"{self.topic}. Closing thread . ", exc_info=True)
 
-
     cdef thread_cb_msg_consume(self, rdkafka.rd_kafka_message_t *rkmessage):
         if rkmessage.err:
             if rkmessage.err == rdkafka.RD_KAFKA_RESP_ERR__PARTITION_EOF:
                 logger.debug("Partition EOF")
             elif rkmessage.rkt:
-                logger.error("Consume error for topic blabla")
+                err_message_str = rdkafka.rd_kafka_message_errstr(rkmessage)
+                logger.error(
+                    f"Consumer error in kafka topic {self.topic}, "
+                    f"partition {rkmessage.partition}, "
+                    f"offset {rkmessage.offset} "
+                    f"error info: {err_message_str}"
+                )
             else:
-                logger.error("Consuming error")
-                print(rdkafka.rd_kafka_err2str(rkmessage.err))
-                print(rdkafka.rd_kafka_message_errstr(rkmessage))
+                err_str = rdkafka.rd_kafka_err2str(rkmessage.err)
+                err_message_str = rdkafka.rd_kafka_message_errstr(rkmessage)
+                logger.error(
+                    f"Consumer error in kafka topic {self.topic}, "
+                    f"error info: {err_str} {err_message_str}"
+                )
         else:
             payload_ptr = <char*>rkmessage.payload
             payload_len = rkmessage.len
             logger.debug(
                 f"Consumed message in thread of topic {self.topic} "
-                f"with payload: {payload_ptr[:payload_len]}")
+                f"with payload: {payload_ptr[:payload_len]}"
+            )
             self.thread_open_asyncio_task(payload_ptr, payload_len)
 
     cdef thread_open_asyncio_task(self, char *payload_ptr, size_t payload_len):

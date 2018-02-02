@@ -5,3 +5,15 @@ class InvalidSetting(Exception):
 
 class UnknownSetting(Exception):
     pass
+
+
+class InvalidBrokers(Exception):
+    pass
+
+
+class SubscriptionError(Exception):
+    pass
+
+
+class ConsumerError(Exception):
+    pass
