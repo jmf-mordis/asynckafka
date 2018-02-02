@@ -1,7 +1,6 @@
-from typing import Callable, Coroutine
-
 cimport rdkafka
 import asyncio
+import logging
 
 import functools
 from libc cimport stdio
@@ -14,6 +13,8 @@ from asynckafka.exceptions import InvalidSetting, UnknownSetting
 from asynckafka import settings
 
 cdef int wait_eof = 0
+
+logger = logging.getLogger('asynckafka')
 
 
 # Kafka logger callback (optional)
@@ -207,43 +208,52 @@ cdef class RdkafkaConsumer:
     cpdef thread_consume_messages(self):
         cdef rdkafka.rd_kafka_message_t *rkmessage
         cdef rdkafka.rd_kafka_t *kafka_consumer
-        print("In consumer thread")
-        while not self.thread_stop_event.is_set():
-            rkmessage = rdkafka.rd_kafka_consumer_poll(self.kafka_consumer, 1000)
-            print("timeout of consumer poll")
-            if rkmessage:
-                self.thread_cb_msg_consume(rkmessage)
-                # rdkafka.rd_kafka_message_destroy(rkmessage) segmentation fault
-        else:
-            print("closing thread")
+        logger.info(f"Opened consumer thread of topic {self.topic}")
+        try:
+            while not self.thread_stop_event.is_set():
+                rkmessage = rdkafka.rd_kafka_consumer_poll(
+                    self.kafka_consumer, 1000)
+                if rkmessage:
+                    self.thread_cb_msg_consume(rkmessage)
+                    # rdkafka.rd_kafka_message_destroy(rkmessage) segmentation fault
+            else:
+                logger.info(f"Closing consumer thread of topic {self.topic}")
+                return
+        except Exception:
+            logger.error(f"Unexpected exception in consumer thread of topic "
+                         f"{self.topic}. Closing thread . ", exc_info=True)
+
 
     cdef thread_cb_msg_consume(self, rdkafka.rd_kafka_message_t *rkmessage):
-        cdef char *payload
-        stdio.printf("consumed message in thread")
         if rkmessage.err:
             if rkmessage.err == rdkafka.RD_KAFKA_RESP_ERR__PARTITION_EOF:
-                print("Partition EOF")
+                logger.debug("Partition EOF")
             elif rkmessage.rkt:
-                print("Consume error for topic blabla")
+                logger.error("Consume error for topic blabla")
             else:
-                print("Consuming error")
+                logger.error("Consuming error")
                 print(rdkafka.rd_kafka_err2str(rkmessage.err))
                 print(rdkafka.rd_kafka_message_errstr(rkmessage))
         else:
-            payload = <char*>rkmessage.payload
-            topic = rdkafka.rd_kafka_topic_name(rkmessage.rkt)
-            print("Message payload: ", payload)
-            print("Topic: ", topic)
-            self.thread_open_asyncio_task(payload)
+            payload_ptr = <char*>rkmessage.payload
+            payload_len = rkmessage.len
+            logger.debug(
+                f"Consumed message in thread of topic {self.topic} "
+                f"with payload: {payload_ptr[:payload_len]}")
+            self.thread_open_asyncio_task(payload_ptr, payload_len)
 
-    cdef thread_open_asyncio_task(self, payload):
+    cdef thread_open_asyncio_task(self, char *payload_ptr, size_t payload_len):
         while not self.thread_stop_event.is_set():
             try:
                 self.thread_coroutine_semaphore.acquire(blocking=True, timeout=1)
             except TimeoutError:
-                print("Coro semaphore is full.")
+                logger.warning(
+                    "Maximum of coroutines reached, there aren't new slots in"
+                    "the last second. "
+                )
             else:
-                coro = self.message_handler(payload)
+                coro = self.message_handler(payload_ptr[:payload_len])
+                logger.debug("Opened new message_handler coroutine in the loop "
+                             "of the main thread")
                 asyncio.run_coroutine_threadsafe(coro, loop=self.loop)
                 return
-

@@ -10,6 +10,7 @@ name = "pypi"
 cython = "*"
 pytest = "*"
 pytest-asyncio = "*"
+kafka-python = "*"
 
 
 [dev-packages]
