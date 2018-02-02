@@ -81,11 +81,13 @@ cdef class Consumer:
     cdef object thread_coroutine_semaphore
     cdef object thread_stop_event
     cdef object _thread
+    cdef bint debug
 
-    def __cinit__(self, brokers, topic, consumer_settings,
-                  message_handler=None, loop=None, topic_settings=None):
+    def __cinit__(self, brokers, topic, consumer_settings, message_handler=None,
+                  loop=None, topic_settings=None, debug = False):
         self.brokers = brokers.encode()
         self.topic = topic.encode()
+        self.debug = 1 if debug else 0
 
         consumer_settings = self._parse_settings(consumer_settings)
         self.consumer_settings = {
@@ -218,7 +220,8 @@ cdef class Consumer:
                     self._thread_cb_msg_consume(rkmessage)
                     rdkafka.rd_kafka_message_destroy(rkmessage) # segmentation fault
                 else:
-                    logger.debug("thread consumer, poll timeout without messages")
+                    if self.debug: logger.debug(
+                        "thread consumer, poll timeout without messages")
             else:
                 logger.info(f"Closing consumer thread of topic {self.topic}")
                 return
@@ -229,7 +232,7 @@ cdef class Consumer:
     cdef _thread_cb_msg_consume(self, rdkafka.rd_kafka_message_t *rkmessage):
         if rkmessage.err:
             if rkmessage.err == rdkafka.RD_KAFKA_RESP_ERR__PARTITION_EOF:
-                logger.debug("Partition EOF")
+                if self.debug: logger.debug("Partition EOF")
             elif rkmessage.rkt:
                 err_message_str = rdkafka.rd_kafka_message_errstr(rkmessage)
                 logger.error(
@@ -248,7 +251,7 @@ cdef class Consumer:
         else:
             payload_ptr = <char*>rkmessage.payload
             payload_len = rkmessage.len
-            logger.debug(
+            if self.debug: logger.debug(
                 f"Consumed message in thread of topic {self.topic} "
                 f"with payload: {payload_ptr[:payload_len]}"
             )
@@ -265,8 +268,9 @@ cdef class Consumer:
                 )
             else:
                 coro = self.message_handler(payload_ptr[:payload_len])
-                logger.debug("Opened new message_handler coroutine in the loop "
-                             "of the main thread")
+                if self.debug: logger.debug(
+                    "Opened new message_handler coroutine in the loop of the "
+                    "main thread")
                 asyncio.run_coroutine_threadsafe(coro, loop=self.loop)
                 return
 
