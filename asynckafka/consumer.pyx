@@ -1,9 +1,14 @@
+import collections
+
 cimport rdkafka
 import asyncio
 import logging
 
 import functools
+
+import time
 from libc cimport stdio
+from queue import Queue, Full, Empty
 
 from libc.stdint cimport int32_t, int64_t
 from threading import Thread, Event, Semaphore
@@ -78,10 +83,11 @@ cdef class Consumer:
 
     cdef object message_handler
     cdef object loop
-    cdef object thread_coroutine_semaphore
+    cdef object thread_queue
     cdef object thread_stop_event
     cdef object _thread
     cdef bint debug
+    cdef object open_tasks_task
 
     def __cinit__(self, brokers, topic, consumer_settings, message_handler=None,
                   loop=None, topic_settings=None, debug = False):
@@ -104,16 +110,14 @@ cdef class Consumer:
             for key, value in topic_settings.items()
         }
 
-        self.message_handler = self.wrap_message_handler(message_handler) \
-            if message_handler else None
+        self.message_handler = message_handler if message_handler else None
         self.loop = loop if loop else asyncio.get_event_loop()
-        self.thread_coroutine_semaphore = Semaphore(
-            value=settings.DEFAULT_MAX_COROUTINES
-        )
+        self.thread_list = []
         self.thread_stop_event = Event()
         self._thread = Thread(
             target=self._thread_consume_messages,
         )
+        self.open_tasks_task = None
 
         self._init_config()
         self._consumer_settings_to_rdkafka()
@@ -121,16 +125,6 @@ cdef class Consumer:
         self._init_consumer()
         self._init_topic()
         self._init_subscription()
-
-    def wrap_message_handler(self, message_handler):
-        # TODO fix memory copy
-        @functools.wraps(message_handler)
-        async def wrapper_message_handler(payload):
-            try:
-                await message_handler(payload)
-            finally:
-                self.thread_coroutine_semaphore.release()
-        return wrapper_message_handler
 
     cpdef _init_config(self):
         self.conf = rdkafka.rd_kafka_conf_new()
@@ -218,7 +212,6 @@ cdef class Consumer:
                     self.kafka_consumer, 1000)
                 if rkmessage:
                     self._thread_cb_msg_consume(rkmessage)
-                    rdkafka.rd_kafka_message_destroy(rkmessage) # segmentation fault
                 else:
                     if self.debug: logger.debug(
                         "thread consumer, poll timeout without messages")
@@ -255,30 +248,47 @@ cdef class Consumer:
                 f"Consumed message in thread of topic {self.topic} "
                 f"with payload: {payload_ptr[:payload_len]}"
             )
-            self._thread_open_asyncio_task(payload_ptr, payload_len)
+            self.insert_in_queue(rkmessage)
 
-    cdef _thread_open_asyncio_task(self, char *payload_ptr, size_t payload_len):
-        while not self.thread_stop_event.is_set():
+    cdef insert_in_queue(self, rdkafka.rd_kafka_message_t *rkmessage):
+        memory_address = <long> rkmessage
+        self.thread_list.append(memory_address)
+        if self.debug: logger.debug("Inserted memory address in list")
+
+    async def _main_thread_open_task(self):
+        cdef rdkafka.rd_kafka_message_t *rkmessage
+        cdef long memory_address
+        while 1:
             try:
-                self.thread_coroutine_semaphore.acquire(blocking=True, timeout=1)
-            except TimeoutError:
-                logger.warning(
-                    "Maximum of coroutines reached, there aren't new slots in"
-                    "the last second. "
+                try:
+                    memory_address = self.thread_list.pop()
+                except (Empty, IndexError):
+                    await asyncio.sleep(0.01)
+                else:
+                    if self.debug: logger.debug("Read message from queue")
+                    rkmessage = <rdkafka.rd_kafka_message_t*> memory_address
+                    payload_ptr = <char*>rkmessage.payload
+                    payload_len = rkmessage.len
+                    if self.debug: logger.debug(
+                        "Main thread consumer opening message handler"
+                        " coroutine in asyncio"
+                    )
+                    message_handler_coroutine = self.message_handler(payload_ptr[:payload_len])
+                    asyncio.ensure_future(message_handler_coroutine, loop=self.loop)
+                    rdkafka.rd_kafka_message_destroy(rkmessage)
+            except Exception:
+                logger.error(
+                    "Unexpected exception consuming messages from thread",
+                    exc_info=True
                 )
-            else:
-                coro = self.message_handler(payload_ptr[:payload_len])
-                if self.debug: logger.debug(
-                    "Opened new message_handler coroutine in the loop of the "
-                    "main thread")
-                asyncio.run_coroutine_threadsafe(coro, loop=self.loop)
-                return
 
     def start(self) -> None:
         if not self.message_handler:
             raise exceptions.ConsumerError(
                 "Message handler is needed before start the consumer")
         self._thread.start()
+        self.open_tasks_task = asyncio.ensure_future(
+            self._main_thread_open_task(), loop=self.loop)
 
     def stop(self) -> None:
         self._rdkafka_consumer.thread_stop_event.set()
@@ -287,3 +297,5 @@ cdef class Consumer:
         except TimeoutError:
             logger.error("Unexpected error closing consumer thread")
             raise
+        # TODO wait for consume all messages
+        self.open_tasks_task.stop()
