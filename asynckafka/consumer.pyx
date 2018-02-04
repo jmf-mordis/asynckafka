@@ -77,8 +77,8 @@ cdef class Consumer:
 
     cdef object message_handlers
     cdef object loop
-    cdef object thread_list
-    cdef unsigned long coro_counter
+    cdef public object thread_list
+    cdef public unsigned long coro_counter
     cdef object thread_stop_event
     cdef object _thread
     cdef bint debug
@@ -211,7 +211,7 @@ cdef class Consumer:
         try:
             while not self.thread_stop_event.is_set():
                 rkmessage = rdkafka.rd_kafka_consumer_poll(
-                    self.kafka_consumer, 1000)
+                    self.kafka_consumer, 10)
                 if rkmessage:
                     self._thread_cb_msg_consume(rkmessage)
                 else:
@@ -271,7 +271,7 @@ cdef class Consumer:
                 )
                 return
             else:
-                if not self.thread_stop_event.is_set():
+                if self.thread_stop_event.is_set():
                     return
                 time.sleep(0.1)
 
