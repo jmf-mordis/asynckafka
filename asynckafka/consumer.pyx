@@ -1,11 +1,13 @@
 import asyncio
 import logging
+import time
+from libc.stdint cimport int32_t
 from queue import Empty
 from threading import Thread, Event
-from libc.stdint cimport int32_t, int64_t
 
 cimport rdkafka
 from asynckafka import exceptions
+from asynckafka import settings
 
 logger = logging.getLogger('asynckafka')
 
@@ -76,6 +78,7 @@ cdef class Consumer:
     cdef object message_handlers
     cdef object loop
     cdef object thread_list
+    cdef unsigned long coro_counter
     cdef object thread_stop_event
     cdef object _thread
     cdef bint debug
@@ -118,6 +121,7 @@ cdef class Consumer:
             target=self._thread_consume_messages,
         )
         self.open_tasks_task = None
+        self.coro_counter = 0
 
 
     cpdef _init_config(self):
@@ -222,6 +226,9 @@ cdef class Consumer:
     def add_message_handler(self, topic, message_handler):
         self.message_handlers[topic.encode()] = message_handler
 
+    def cb_coro_counter_decrease(self, _):
+        self.coro_counter -= 1
+
     cdef _thread_cb_msg_consume(self, rdkafka.rd_kafka_message_t *rkmessage):
         if rkmessage.err:
             if rkmessage.err == rdkafka.RD_KAFKA_RESP_ERR__PARTITION_EOF:
@@ -254,9 +261,19 @@ cdef class Consumer:
 
     cdef insert_in_queue(self, rdkafka.rd_kafka_message_t *rkmessage):
         memory_address = <long> rkmessage
-        self.thread_list.append(memory_address)
-        if self.debug: logger.debug(
-            "Sent memory address from consumer thread to asyncio thread")
+        while True:
+            if self.coro_counter < settings.DEFAULT_MAX_COROUTINES:
+                self.coro_counter += 1
+                self.thread_list.append(memory_address)
+                if self.debug: logger.debug(
+                    "Sent memory address of message from consumer "
+                    "thread to asyncio thread"
+                )
+                return
+            else:
+                if not self.thread_stop_event.is_set():
+                    return
+                time.sleep(0.1)
 
     async def _main_thread_open_task(self):
         cdef rdkafka.rd_kafka_message_t *rkmessage
@@ -275,8 +292,9 @@ cdef class Consumer:
                     topic = rdkafka.rd_kafka_topic_name(rkmessage.rkt)
                     message_handler_coroutine = self.message_handlers[topic](
                         payload_ptr[:payload_len])
-                    asyncio.ensure_future(
+                    task = asyncio.ensure_future(
                         message_handler_coroutine, loop=self.loop)
+                    task.add_done_callback(self.cb_coro_counter_decrease)
                     rdkafka.rd_kafka_message_destroy(rkmessage)
             except Exception:
                 logger.error(
