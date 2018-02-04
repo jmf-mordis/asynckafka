@@ -1,22 +1,11 @@
-import collections
-
-cimport rdkafka
 import asyncio
 import logging
-
-import functools
-
-import time
-from libc cimport stdio
-from queue import Queue, Full, Empty
-
+from queue import Empty
+from threading import Thread, Event
 from libc.stdint cimport int32_t, int64_t
-from threading import Thread, Event, Semaphore
 
+cimport rdkafka
 from asynckafka import exceptions
-
-from asynckafka import settings
-
 
 logger = logging.getLogger('asynckafka')
 
@@ -42,7 +31,10 @@ cdef log_partition_list(rdkafka.rd_kafka_topic_partition_list_t *partitions):
         topic = partitions.elems[i].topic
         partition = partitions.elems[i].partition
         offset = partitions.elems[i].offset
-        string += f"\nTopic: {topic}, Partition: {partition},  Offset: {offset}"
+        string += f"\n" \
+                  f"Topic: {topic}, " \
+                  f"Partition: {partition}, " \
+                  f"Offset: {offset}"
     logger.debug(string)
 
 
@@ -77,24 +69,28 @@ cdef class Consumer:
     cdef rdkafka.rd_kafka_topic_partition_list_t *topic_list
 
     cdef bytes brokers
-    cdef bytes topic
+    cdef list topics
     cdef dict consumer_settings
     cdef dict topic_settings
 
-    cdef object message_handler
+    cdef object message_handlers
     cdef object loop
-    cdef object thread_queue
+    cdef object thread_list
     cdef object thread_stop_event
     cdef object _thread
     cdef bint debug
     cdef object open_tasks_task
 
-    def __cinit__(self, brokers, topic, consumer_settings, message_handler=None,
-                  loop=None, topic_settings=None, debug = False):
+    def __cinit__(self, brokers, group_id=None, consumer_settings=None,
+                  message_handlers=None, loop=None, topic_settings=None,
+                  debug = False):
+
         self.brokers = brokers.encode()
-        self.topic = topic.encode()
         self.debug = 1 if debug else 0
 
+        consumer_settings = consumer_settings if consumer_settings else {}
+        if group_id:
+            consumer_settings['group.id'] = group_id
         consumer_settings = self._parse_settings(consumer_settings)
         self.consumer_settings = {
             key.encode(): value.encode()
@@ -110,7 +106,11 @@ cdef class Consumer:
             for key, value in topic_settings.items()
         }
 
-        self.message_handler = message_handler if message_handler else None
+        message_handlers = message_handlers if message_handlers else {}
+        self.message_handlers = {
+            key.encode(): value
+            for key, value in  message_handlers.items()
+        }
         self.loop = loop if loop else asyncio.get_event_loop()
         self.thread_list = []
         self.thread_stop_event = Event()
@@ -119,12 +119,6 @@ cdef class Consumer:
         )
         self.open_tasks_task = None
 
-        self._init_config()
-        self._consumer_settings_to_rdkafka()
-        self._init_consumer_group()
-        self._init_consumer()
-        self._init_topic()
-        self._init_subscription()
 
     cpdef _init_config(self):
         self.conf = rdkafka.rd_kafka_conf_new()
@@ -165,8 +159,8 @@ cdef class Consumer:
         rdkafka.rd_kafka_conf_set_rebalance_cb(self.conf, cb_rebalance)
 
     def _init_consumer(self):
-        self.kafka_consumer = rdkafka.rd_kafka_new(
-            rdkafka.RD_KAFKA_CONSUMER, self.conf, self.errstr, sizeof(self.errstr))
+        self.kafka_consumer = rdkafka.rd_kafka_new(rdkafka.RD_KAFKA_CONSUMER,
+            self.conf, self.errstr, sizeof(self.errstr))
         if self.kafka_consumer == NULL:
             err_str = "Unexpected error creating kafka consumer"
             logger.error(err_str)
@@ -187,12 +181,16 @@ cdef class Consumer:
             logger.error(err_str_poll)
             raise exceptions.ConsumerError(err_str_poll)
 
-    def _init_topic(self):
-        self.topic_list = rdkafka.rd_kafka_topic_partition_list_new(1)
-        cdef int32_t partition = -1
-        cdef char *topic_ptr = self.topic
-        rdkafka.rd_kafka_topic_partition_list_add(
-            self.topic_list, topic_ptr, partition)
+    def _init_topics(self):
+        cdef int32_t partition
+        cdef char *topic_ptr
+        self.topic_list = rdkafka.rd_kafka_topic_partition_list_new(
+            len(self.message_handlers))
+        for topic in self.message_handlers.keys():
+            partition = -1
+            topic_ptr = topic
+            rdkafka.rd_kafka_topic_partition_list_add(
+                self.topic_list, topic_ptr, partition)
 
     def _init_subscription(self):
         err = rdkafka.rd_kafka_subscribe(self.kafka_consumer, self.topic_list)
@@ -205,7 +203,7 @@ cdef class Consumer:
     cpdef _thread_consume_messages(self):
         cdef rdkafka.rd_kafka_message_t *rkmessage
         cdef rdkafka.rd_kafka_t *kafka_consumer
-        logger.info(f"Opened consumer thread of topic {self.topic}")
+        logger.info(f"Opened consumer thread.")
         try:
             while not self.thread_stop_event.is_set():
                 rkmessage = rdkafka.rd_kafka_consumer_poll(
@@ -216,11 +214,13 @@ cdef class Consumer:
                     if self.debug: logger.debug(
                         "thread consumer, poll timeout without messages")
             else:
-                logger.info(f"Closing consumer thread of topic {self.topic}")
-                return
+                logger.info(f"Closing consumer thread.")
         except Exception:
-            logger.error(f"Unexpected exception in consumer thread of topic "
-                         f"{self.topic}. Closing thread . ", exc_info=True)
+            logger.error(f"Unexpected exception in consumer thread. "
+                         "Closing thread.", exc_info=True)
+
+    def add_message_handler(self, topic, message_handler):
+        self.message_handlers[topic.encode()] = message_handler
 
     cdef _thread_cb_msg_consume(self, rdkafka.rd_kafka_message_t *rkmessage):
         if rkmessage.err:
@@ -228,8 +228,9 @@ cdef class Consumer:
                 if self.debug: logger.debug("Partition EOF")
             elif rkmessage.rkt:
                 err_message_str = rdkafka.rd_kafka_message_errstr(rkmessage)
+                topic = rdkafka.rd_kafka_topic_name(rkmessage.rkt)
                 logger.error(
-                    f"Consumer error in kafka topic {self.topic}, "
+                    f"Consumer error in kafka topic {topic}, "
                     f"partition {rkmessage.partition}, "
                     f"offset {rkmessage.offset} "
                     f"error info: {err_message_str}"
@@ -238,43 +239,44 @@ cdef class Consumer:
                 err_str = rdkafka.rd_kafka_err2str(rkmessage.err)
                 err_message_str = rdkafka.rd_kafka_message_errstr(rkmessage)
                 logger.error(
-                    f"Consumer error in kafka topic {self.topic}, "
-                    f"error info: {err_str} {err_message_str}"
+                    f"Consumer error {err_str} {err_message_str}"
                 )
         else:
-            payload_ptr = <char*>rkmessage.payload
-            payload_len = rkmessage.len
-            if self.debug: logger.debug(
-                f"Consumed message in thread of topic {self.topic} "
-                f"with payload: {payload_ptr[:payload_len]}"
-            )
+            if self.debug:
+                payload_ptr = <char*>rkmessage.payload
+                payload_len = rkmessage.len
+                topic = rdkafka.rd_kafka_topic_name(rkmessage.rkt)
+                logger.debug(
+                    f"Consumed message in thread of topic {topic} "
+                    f"with payload: {payload_ptr[:payload_len]}"
+                )
             self.insert_in_queue(rkmessage)
 
     cdef insert_in_queue(self, rdkafka.rd_kafka_message_t *rkmessage):
         memory_address = <long> rkmessage
         self.thread_list.append(memory_address)
-        if self.debug: logger.debug("Inserted memory address in list")
+        if self.debug: logger.debug(
+            "Sent memory address from consumer thread to asyncio thread")
 
     async def _main_thread_open_task(self):
         cdef rdkafka.rd_kafka_message_t *rkmessage
-        cdef long memory_address
-        while 1:
+        cdef long payload_memory_address
+        while True:
             try:
                 try:
-                    memory_address = self.thread_list.pop()
+                    payload_memory_address = self.thread_list.pop()
                 except (Empty, IndexError):
                     await asyncio.sleep(0.01)
                 else:
-                    if self.debug: logger.debug("Read message from queue")
-                    rkmessage = <rdkafka.rd_kafka_message_t*> memory_address
+                    rkmessage = <rdkafka.rd_kafka_message_t*> \
+                        payload_memory_address
                     payload_ptr = <char*>rkmessage.payload
                     payload_len = rkmessage.len
-                    if self.debug: logger.debug(
-                        "Main thread consumer opening message handler"
-                        " coroutine in asyncio"
-                    )
-                    message_handler_coroutine = self.message_handler(payload_ptr[:payload_len])
-                    asyncio.ensure_future(message_handler_coroutine, loop=self.loop)
+                    topic = rdkafka.rd_kafka_topic_name(rkmessage.rkt)
+                    message_handler_coroutine = self.message_handlers[topic](
+                        payload_ptr[:payload_len])
+                    asyncio.ensure_future(
+                        message_handler_coroutine, loop=self.loop)
                     rdkafka.rd_kafka_message_destroy(rkmessage)
             except Exception:
                 logger.error(
@@ -283,9 +285,20 @@ cdef class Consumer:
                 )
 
     def start(self) -> None:
-        if not self.message_handler:
+        self._init_config()
+        self._consumer_settings_to_rdkafka()
+        self._init_consumer_group()
+        self._init_consumer()
+        self._init_topics()
+        self._init_subscription()
+        if not self.message_handlers:
             raise exceptions.ConsumerError(
-                "Message handler is needed before start the consumer")
+                "At least one message handler is needed before start the "
+                "consumer")
+        elif self.open_tasks_task:
+            raise exceptions.ConsumerError(
+                "Consumer is already started"
+            )
         self._thread.start()
         self.open_tasks_task = asyncio.ensure_future(
             self._main_thread_open_task(), loop=self.loop)

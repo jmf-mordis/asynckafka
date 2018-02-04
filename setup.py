@@ -29,6 +29,11 @@ setup(
             ["asynckafka/consumer.pyx"],
             libraries=["rdkafka"]
         ),
+        Extension(
+            "asynckafka.utils",
+            ["asynckafka/utils.pyx"],
+            libraries=["rdkafka"]
+        ),
     ]),
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',

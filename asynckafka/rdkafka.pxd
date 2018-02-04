@@ -1,6 +1,6 @@
 from libc.stdint cimport int32_t, int64_t
 
-cdef extern from "/usr/local/include/librdkafka/rdkafka.h":
+cdef extern from "librdkafka/rdkafka.h":
     ctypedef struct rd_kafka_t
     ctypedef struct rd_kafka_topic_t
     ctypedef struct rd_kafka_conf_t
@@ -191,7 +191,10 @@ cdef extern from "/usr/local/include/librdkafka/rdkafka.h":
 
     cdef int _RD_KAFKA_PARTITION_UA "RD_KAFKA_PARTITION_UA"
 
-    rd_kafka_resp_err_t rd_kafka_assign(rd_kafka_t *rk, const rd_kafka_topic_partition_list_t *partitions)
+    rd_kafka_resp_err_t rd_kafka_assign(
+            rd_kafka_t *rk,
+            const rd_kafka_topic_partition_list_t *partitions
+    )
 
     ctypedef struct rd_kafka_topic_partition_list_t:
         int cnt  # Current number of elements
@@ -206,7 +209,7 @@ cdef extern from "/usr/local/include/librdkafka/rdkafka.h":
         size_t       metadata_size  # Metadata size
         void        *opaque  # Application opaque
         rd_kafka_resp_err_t err  # Error code, depending on use
-        void       *_private  # INTERNAL USE ONLY, INITIALIZE TO ZERO, DO NOT TOUCH
+        void       *_private
 
     # Returns a human readable representation of a kafka error.
     const char *rd_kafka_err2str(rd_kafka_resp_err_t err)
@@ -248,10 +251,18 @@ cdef extern from "/usr/local/include/librdkafka/rdkafka.h":
     rd_kafka_resp_err_t rd_kafka_poll_set_consumer (rd_kafka_t *rk)
 
     rd_kafka_topic_partition_list_t *rd_kafka_topic_partition_list_new(int size)
-    rd_kafka_topic_partition_t *rd_kafka_topic_partition_list_add(rd_kafka_topic_partition_list_t *rktparlist, const char *topic, int32_t partition)
+    rd_kafka_topic_partition_t *rd_kafka_topic_partition_list_add(
+            rd_kafka_topic_partition_list_t *rktparlist,
+            const char *topic, int32_t partition
+    )
 
     rd_kafka_message_t *rd_kafka_consumer_poll(rd_kafka_t *rk, int timeout_ms)
 
     void rd_kafka_message_destroy(rd_kafka_message_t *rkmessage)
 
-    rd_kafka_resp_err_t rd_kafka_subscribe (rd_kafka_t *rk, const rd_kafka_topic_partition_list_t *topics)
+    rd_kafka_resp_err_t rd_kafka_subscribe (
+            rd_kafka_t *rk,
+            const rd_kafka_topic_partition_list_t *topics
+    )
+
+    const char *rd_kafka_version_str ()

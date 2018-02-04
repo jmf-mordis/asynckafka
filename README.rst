@@ -3,18 +3,22 @@ Asynckafka
 **********
 
 Fast python kafka library for asyncio. 
-Asyncafka is written in cython and essentialy it provides an easy interface for use rdkafka with asyncio.
+Asyncafka is written in cython and essentially it provides an easy interface
+for use rdkafka with asyncio.
 
-Right now it is work in progress, it's little more than a proof of concept, please don't use it in production, or use it at our own risk. I also do not guarantee stability in the api during this period.
-
-
+Right now it is work in progress, it's little more than a proof of concept,
+please don't use it in production, or use it at our own risk. I also do not
+guarantee stability in the api during this period.
 
 Performance
 ###########
 
-This is the main porpuse of this library, there is others python librarys for python with good performance, but them they do not work natively with asyncio.
+This is the main porpoise of this library, there is others python library's
+for python with good performance, but them they do not work natively
+with asyncio.
 
-On the other hand the libraries that support asyncio do not offer a good enough performance for some applications.
+On the other hand the libraries that support asyncio do not offer a good
+enough performance for some applications.
 
 
 WIP
@@ -40,8 +44,9 @@ Basic consumer example::
     loop = asyncio.get_event_loop()
     consumer = Consumer(
         brokers='localhost:9092', 
-        topic='my_topic',
-        message_handler=message_handler,
+        message_handlers={
+            'my_topic': message_handler
+        },
         consumer_settings={'group.id': 'my_group'},
         loop=loop
     )
@@ -80,7 +85,7 @@ How to use
 Requirements
 ****************
 
-#. Python 3.6 or greather
+#. Python 3.6 or greater
 #. Rdkafka 0.11.X
 
 Install rdkafka

@@ -11,6 +11,8 @@ cython = "*"
 pytest = "*"
 pytest-asyncio = "*"
 kafka-python = "*"
+uvloop = "*"
+confluent-kafka = "*"
 
 
 [dev-packages]
