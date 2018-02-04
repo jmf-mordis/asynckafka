@@ -3,21 +3,21 @@ Asynckafka
 **********
 
 Fast python kafka library for asyncio. 
-Asyncafka is written in cython and essentially it provides an easy interface
-for use rdkafka with asyncio.
+Asyncafka is written in cython and essentially provides an user
+friendly interface for use rdkafka with asyncio.
 
-Right now it is work in progress, it's little more than a proof of concept,
+Right now it is work in progress and it's little more than a proof of concept,
 please don't use it in production, or use it at our own risk. I also do not
 guarantee stability in the api during this period.
 
 Performance
 ###########
 
-This is the main porpoise of this library, there is others python library's
-for python with good performance, but them they do not work natively
-with asyncio.
+The performance is the main porpoise of this library, there is others good
+python library's with good performance, as confluent-kafka, but do not work
+natively asyncio.
 
-On the other hand the libraries that support asyncio do not offer a good
+On the other hand, the asyncio libraries that i tested do not offer a good
 enough performance for some applications.
 
 
@@ -42,15 +42,15 @@ Basic consumer example::
 
 
     loop = asyncio.get_event_loop()
+
     consumer = Consumer(
-        brokers='localhost:9092', 
-        message_handlers={
-            'my_topic': message_handler
-        },
-        consumer_settings={'group.id': 'my_group'},
+        brokers='localhost:9092',
+        group_id='my_group_id',
         loop=loop
     )
+    consumer.set_message_handler('my_topic', message_handler)
     consumer.start()
+
     loop.run_forever()
 
 
@@ -78,7 +78,6 @@ Basic producer example::
     asyncio.ensure_future(send_message(producer), loop=loop)
     loop.run_forever()
 
-
 How to use
 ##########
 
@@ -99,3 +98,16 @@ Install package
 Install it with pip::
 
     $ pip install asynckafka
+
+
+Logging
+#######
+
+Asynckafka uses the standard logging library, the logger name is ""asynckafka".
+
+For enable it to stdout is enough with::
+
+    import logging
+    import sys
+    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+
