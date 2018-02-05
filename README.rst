@@ -63,6 +63,7 @@ really don't need the tasks. But if you want the a good performance take in
 account that you should't do any blocking operation inside the async for.
 
 Async iterator consumer example::
+
     import asyncio
 
     from asynckafka import AsyncIterConsumer
