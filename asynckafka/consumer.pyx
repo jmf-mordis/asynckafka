@@ -209,12 +209,13 @@ cdef class Consumer:
     cdef object _open_tasks_task
 
     cdef object _consumer_thread_stop
+    cdef object _open_asyncio_tasks
     cdef bint _debug
 
 
     def __cinit__(self, brokers, group_id=None, consumer_settings=None,
                   topic_settings=None, message_handlers=None, loop=None,
-                  debug = False):
+                  open_asyncio_tasks=True, debug = False):
         self._rd_kafka = RdKafkaStructs(
             brokers=brokers, group_id=group_id, consumer_settings=consumer_settings,
             topic_settings=topic_settings
@@ -233,6 +234,7 @@ cdef class Consumer:
         self.coro_counter = 0
         self._consumer_thread_stop = Event()
         self._debug = 1 if debug else 0
+        self._open_asyncio_tasks = open_asyncio_tasks
 
     cpdef _consumer_thread_main(self):
         cdef rdkafka.rd_kafka_message_t *rkmessage
@@ -311,7 +313,10 @@ cdef class Consumer:
                 except IndexError:
                     await asyncio.sleep(0.01)
                 else:
-                    self._open_asyncio_task(message_memory_address)
+                    if self._open_asyncio_tasks:
+                        self._open_asyncio_task(message_memory_address)
+                    else:
+                        await self.call_message_handler(message_memory_address)
             except Exception:
                 logger.error(
                     "Unexpected exception consuming messages from thread",
@@ -319,8 +324,6 @@ cdef class Consumer:
                 )
 
     cdef _open_asyncio_task(self, long message_memory_address):
-        cdef rdkafka.rd_kafka_message_t *rkmessage
-
         rkmessage = <rdkafka.rd_kafka_message_t*> message_memory_address
         payload_ptr = <char*>rkmessage.payload
         payload_len = rkmessage.len
@@ -333,10 +336,24 @@ cdef class Consumer:
         message_handler_task.add_done_callback(self._cb_coroutine_counter_decrease)
         rdkafka.rd_kafka_message_destroy(rkmessage)
 
+    async def call_message_handler(self, long message_memory_address):
+        rkmessage = <rdkafka.rd_kafka_message_t*> message_memory_address
+        payload_ptr = <char*>rkmessage.payload
+        payload_len = rkmessage.len
+        topic = rdkafka.rd_kafka_topic_name(rkmessage.rkt)
+
+        try:
+            await self.message_handlers[topic](payload_ptr[:payload_len])
+        except Exception:
+            logger.error(f"Not captured exception in message handler "
+                         f"of topic {str(topic)}",
+                         exc_info=True,)
+        rdkafka.rd_kafka_message_destroy(rkmessage)
+
     def _cb_coroutine_counter_decrease(self, _):
         self.coro_counter -= 1
 
-    def start(self) -> None:
+    def start(self):
         logger.debug("Starting asynckafka consumer")
         if not self.message_handlers:
             raise exceptions.ConsumerError(
@@ -349,7 +366,7 @@ cdef class Consumer:
             self._read_from_consumer_thread(), loop=self.loop
         )
 
-    def stop(self) -> None:
+    def stop(self):
         self._consumer_thread_stop.set()
         try:
             self._consumer_thread.join(timeout=10)
