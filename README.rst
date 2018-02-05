@@ -27,10 +27,13 @@ WIP
 Using Asynckafka
 ################
 
-Consumer
-**************
+Consumer with message handlers
+******************************
+It opens a asyncio task per message in each message handler. You can manage
+the number of tasks opened by this consumer with the parameter max_coroutines,
+allowing you to control the back pressure of the service.
 
-Basic consumer example::
+Consumer with message handlers example::
 
     import asyncio
 
@@ -43,16 +46,45 @@ Basic consumer example::
 
     loop = asyncio.get_event_loop()
 
-    consumer = Consumer(
-        brokers='localhost:9092',
-        group_id='my_group_id',
-        loop=loop
-    )
+    consumer = Consumer(brokers='localhost:9092', group_id='my_group_id',
+        loop=loop)
     consumer.set_message_handler('my_topic', message_handler)
     consumer.start()
 
     loop.run_forever()
 
+
+Consumer as async iterator
+**************************
+Consumer that consume messages from one topic as an asyncronous iterator.
+In contrast with the message handler consumer this consumer don't spawn a
+asyncio task per message. It is going to increase the performance if you
+really don't need the tasks. But if you want the a good performance take in
+account that you should't do any blocking operation inside the async for.
+
+Async iterator consumer example::
+    import asyncio
+
+    from asynckafka import AsyncIterConsumer
+
+
+    async def consume_messages(async_iter_consumer):
+        async for message in async_iter_consumer:
+            print(message)
+
+
+    loop = asyncio.get_event_loop()
+    my_topic_consumer = AsyncIterConsumer(
+        brokers='localhost:9092',
+        topic='my_topic',
+        group_id='my_group_id',
+        loop=loop
+    )
+    my_topic_consumer.start()
+
+    consume_coroutine = consume_messages(my_topic_consumer())
+    asyncio.ensure_future(consume_coroutine, loop=loop)
+    loop.run_forever()
 
 
 Producer
@@ -70,11 +102,13 @@ Basic producer example::
             await asyncio.sleep(1)
             producer.produce("my_message")
 
+
     loop = asyncio.get_event_loop()
     producer = Producer(
         brokers="localhost:9092",
         topic="my_topic"
     )
+
     asyncio.ensure_future(send_message(producer), loop=loop)
     loop.run_forever()
 
