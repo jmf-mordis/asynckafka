@@ -54,7 +54,7 @@ Consumer with message handlers example::
     loop.run_forever()
 
 
-Consumer as async iterator
+Stream Consumer
 **************************
 Consumer that consume messages from one topic as an asyncronous iterator.
 In contrast with the message handler consumer this consumer don't spawn a
@@ -66,26 +66,31 @@ Async iterator consumer example::
 
     import asyncio
 
-    from asynckafka import AsyncIterConsumer
+    from asynckafka import StreamConsumer
 
 
-    async def consume_messages(async_iter_consumer):
-        async for message in async_iter_consumer:
+    async def consume_messages(message_stream):
+        async for message in message_stream:
             print(message)
 
 
     loop = asyncio.get_event_loop()
-    my_topic_consumer = AsyncIterConsumer(
+    message_stream = AsyncIterConsumer(
         brokers='localhost:9092',
         topic='my_topic',
         group_id='my_group_id',
         loop=loop
     )
-    my_topic_consumer.start()
+    message_stream.start()
 
-    consume_coroutine = consume_messages(my_topic_consumer())
+    consume_coroutine = consume_messages(message_stream)
     asyncio.ensure_future(consume_coroutine, loop=loop)
-    loop.run_forever()
+
+    try:
+        loop.run_forever()
+    finally:
+        loop.stop()
+        message_stream.stop()
 
 
 Producer

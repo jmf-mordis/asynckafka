@@ -7,7 +7,7 @@ from threading import Thread, Event
 cimport rdkafka
 from asynckafka import exceptions
 from asynckafka import settings
-from asynckafka.consumer_asynciter import ConsumerAsyncIterator
+from asynckafka.consumer_aiter import ConsumerAsyncIterator
 
 logger = logging.getLogger('asynckafka')
 
@@ -15,28 +15,27 @@ logger = logging.getLogger('asynckafka')
 cdef void cb_logger(const rdkafka.rd_kafka_t *rk, int level, const char *fac,
                     const char *buf):
     if level in {1, 2}:
-        logger.critical(f"{fac}:{buf}")
+        logger.critical(f"{str(fac)}:{str(buf)}")
     elif level == 3:
-        logger.error(f"{fac}:{buf}")
+        logger.error(f"{str(fac)}:{str(buf)}")
     elif level in {4, 5}:
-        logger.info(f"{fac}:{buf}")
+        logger.info(f"{str(fac)}:{str(buf)}")
     elif level in {6, 7} :
-        logger.debug(f"{fac}:{buf}")
+        logger.debug(f"{str(fac)}:{str(buf)}")
     else:
         logger.critical(f"Unexpected logger level {level}")
         logger.critical(f"{fac}:{buf}")
 
 
 cdef log_partition_list(rdkafka.rd_kafka_topic_partition_list_t *partitions):
-    string = "List of partitions: "
+    string = "List of partitions:"
     for i in range(partitions.cnt):
         topic = partitions.elems[i].topic
         partition = partitions.elems[i].partition
         offset = partitions.elems[i].offset
-        string += f"\n" \
-                  f"Topic: {topic}, " \
-                  f"Partition: {partition}, " \
-                  f"Offset: {offset}"
+        string += f" [Topic: {str(topic)}, " \
+                  f"Partition: {str(partition)}, " \
+                  f"Offset: {str(offset)}]"
     logger.debug(string)
 
 
@@ -61,7 +60,7 @@ cdef void cb_rebalance(
         rdkafka.rd_kafka_assign(rk, NULL)
 
 
-cdef class RdKafkaStructs:
+cdef class RdKafkaConsumer:
     cdef rdkafka.rd_kafka_t *consumer
     cdef rdkafka.rd_kafka_conf_t *conf
     cdef rdkafka.rd_kafka_topic_conf_t *topic_conf
@@ -98,17 +97,32 @@ cdef class RdKafkaStructs:
         parsed_settings = self._parse_settings(settings)
         return self._encode_settings(parsed_settings)
 
-    def start_rd_kafka_consumer(self):
+    def start(self):
         self._init_rd_kafka_configs()
         self._init_rd_kafka_consumer_group()
         self._init_rd_kafka_consumer()
         self._init_rd_kafka_topic_partition_lists()
         self._init_rd_kafka_subscription()
 
+    def stop(self):
+        logger.info('Triggered the stop of the rdkafka consumer')
+        logger.info('Destroying the topic partition list')
+        rdkafka.rd_kafka_topic_partition_list_destroy(
+            self.topic_partition_list)
+        logger.info('Closing rdkafka consumer')
+        err_code = rdkafka.rd_kafka_consumer_close(self.consumer)
+        if err_code:
+            err_str = str(rdkafka.rd_kafka_err2str(err_code))
+            logger.error(f"Error closing rdkafka consumer: {err_str}")
+            raise exceptions.ConsumerError(err_str)
+        logger.info('Destroying rdkafka consumer')
+        rdkafka.rd_kafka_destroy(self.consumer)
+        logger.info('Rdkafka consumer destroyed correctly')
+
     def add_topic(self, topic):
         self.topics.append(topic)
 
-    cpdef _init_rd_kafka_configs(self):
+    def _init_rd_kafka_configs(self):
         self.conf = rdkafka.rd_kafka_conf_new()
         rdkafka.rd_kafka_conf_set_log_cb(self.conf, cb_logger)
         self.topic_conf = rdkafka.rd_kafka_topic_conf_new()
@@ -200,7 +214,7 @@ cdef class RdKafkaStructs:
 
 
 cdef class ConsumerThread:
-    cdef RdKafkaStructs _rd_kafka
+    cdef RdKafkaConsumer _rd_kafka
 
     cdef object thread
     cdef object stop_event
@@ -210,21 +224,22 @@ cdef class ConsumerThread:
 
     cdef char _debug
 
-    def __init__(self, RdKafkaStructs rd_kafka_struct, debug=False):
+    def __init__(self, RdKafkaConsumer rd_kafka_struct, debug=False):
         self._rd_kafka = rd_kafka_struct
-        self.thread = Thread(target=self._main())
+        self.thread = Thread(target=self._main_poll_rdkafka)
         self.thread_communication_list = []
+        self.consumption_limiter = 0
         self.stop_event = Event()
         self._debug = 1 if debug else 0
 
-    cpdef _main(self):
+    cpdef _main_poll_rdkafka(self):
         cdef rdkafka.rd_kafka_message_t *rkmessage
         cdef rdkafka.rd_kafka_t *kafka_consumer
         logger.info(f"Opened consumer thread.")
         try:
             while not self.stop_event.is_set():
                 rkmessage = rdkafka.rd_kafka_consumer_poll(
-                    self._rd_kafka.consumer, 100)
+                    self._rd_kafka.consumer, 10)
                 if rkmessage:
                     self._cb_consume_message(rkmessage)
                 else:
@@ -282,6 +297,7 @@ cdef class ConsumerThread:
             else:
                 if self.stop_event.is_set():
                     return
+                logger.debug("Consumer limit reached in consumer thread")
                 time.sleep(0.1)
 
     cdef increase_consumption_limiter(self):
@@ -294,24 +310,38 @@ cdef class ConsumerThread:
         self.thread.start()
 
     def stop(self):
+        logger.info('Stopping consumer thread')
         self.stop_event.set()
+        logger.info('Triggered thread stop event, waiting for the thread to '
+                    'close.')
         self.thread.join(timeout=5)
+        logger.info('Thread closed, destroying all allocated messages.')
+        self._destroy_all_remaining_messages()
+        logger.info('Destroyed all the remaining messages consumed by the '
+                    'thread.')
+
+    cdef _destroy_all_remaining_messages(self):
+        for _ in range(len(self.thread_communication_list)):
+            message_memory_address = self.thread_communication_list.pop()
+            self.decrease_consumption_limiter()
+            rkmessage = <rdkafka.rd_kafka_message_t*> message_memory_address
+            rdkafka.rd_kafka_message_destroy(rkmessage)
 
 
 cdef class Consumer:
-    cdef RdKafkaStructs _rd_kafka
+    cdef RdKafkaConsumer _rd_kafka
     cdef ConsumerThread _consumer_thread
 
     cdef object message_handlers
     cdef object loop
-    cdef object _open_tasks_task
+    cdef object _poll_consumer_thread_task
     cdef object _spawn_tasks
     cdef bint _debug
 
     def __cinit__(self, brokers, group_id=None, consumer_settings=None,
                   topic_settings=None, message_handlers=None, loop=None,
                   spawn_tasks=True, debug=False):
-        self._rd_kafka = RdKafkaStructs(
+        self._rd_kafka = RdKafkaConsumer(
             brokers=brokers, group_id=group_id, consumer_settings=consumer_settings,
             topic_settings=topic_settings
         )
@@ -323,11 +353,11 @@ cdef class Consumer:
             for key, value in  message_handlers.items()
         }
         self.loop = loop if loop else asyncio.get_event_loop()
-        self._open_tasks_task = None
+        self._poll_consumer_thread_task = None
         self._debug = 1 if debug else 0
         self._spawn_tasks = spawn_tasks
 
-    async def _read_from_consumer_thread(self):
+    async def _poll_consumer_thread(self):
         cdef long message_memory_address
         while True:
             try:
@@ -340,12 +370,22 @@ cdef class Consumer:
                     if self._spawn_tasks:
                         self._open_asyncio_task(message_memory_address)
                     else:
-                        await self._call_message_handler(message_memory_address)
+                        try:
+                            await self._call_message_handler(message_memory_address)
+                        finally:
+                            rkmessage = <rdkafka.rd_kafka_message_t*> \
+                                message_memory_address
+                            self._consumer_thread.decrease_consumption_limiter()
+                            rdkafka.rd_kafka_message_destroy(rkmessage)
+            except asyncio.CancelledError:
+                logger.info("Poll consumer thread task canceled correctly")
+                return
             except Exception:
-                logger.error(
+                logger.critical(
                     "Unexpected exception consuming messages from thread",
                     exc_info=True
                 )
+                raise
 
     cdef _open_asyncio_task(self, long message_memory_address):
         rkmessage = <rdkafka.rd_kafka_message_t*> message_memory_address
@@ -357,7 +397,8 @@ cdef class Consumer:
             self.message_handlers[topic](payload_ptr[:payload_len])
         message_handler_task = asyncio.ensure_future(
             message_handler_coroutine, loop=self.loop)
-        message_handler_task.add_done_callback(self._cb_coroutine_counter_decrease)
+        message_handler_task.add_done_callback(
+            self._cb_coroutine_counter_decrease)
         rdkafka.rd_kafka_message_destroy(rkmessage)
 
     def _cb_coroutine_counter_decrease(self, _):
@@ -373,83 +414,84 @@ cdef class Consumer:
         except Exception:
             logger.error(f"Not captured exception in message handler "
                          f"of topic {str(topic)}", exc_info=True)
-        finally:
-            self._consumer_thread.decrease_consumption_limiter()
-            rdkafka.rd_kafka_message_destroy(rkmessage)
 
     def start(self):
         logger.debug("Starting asynckafka consumer")
         if not self.message_handlers:
+            logger.error("Asynckafka consumer can't be started without "
+                         "message handlers.")
             raise exceptions.ConsumerError(
                 "At least one message handler is needed before start the "
-                "consumer"
+                "consumer."
             )
-        self._rd_kafka.start_rd_kafka_consumer()
+        self._rd_kafka.start()
         self._consumer_thread.start()
-        self._open_tasks_task = asyncio.ensure_future(
-            self._read_from_consumer_thread(), loop=self.loop
+        self._poll_consumer_thread_task = asyncio.ensure_future(
+            self._poll_consumer_thread(), loop=self.loop
         )
 
     def stop(self):
+        logger.info("Stopping asynckafka consumer")
+        logger.info("Closing poll consumer thread task")
+        self._poll_consumer_thread_task.cancel()
         self._consumer_thread.stop()
-        # TODO wait for consume all messages
-        self._open_tasks_task.cancel()
+        self._rd_kafka.stop()
+        logger.info("Stopped correctly asynckafka consumer")
 
     def add_message_handler(self, topic, message_handler):
-        logger.debug(f"Added message handler for topic {topic}")
+        logger.info(f"Added message handler for topic {topic}")
         encoded_topic = topic.encode()
         self._rd_kafka.add_topic(encoded_topic)
         self.message_handlers[encoded_topic] = message_handler
 
 
-cdef class AsyncIterConsumer:
-    cdef RdKafkaStructs _rd_kafka
+cdef class StreamConsumer:
+    cdef RdKafkaConsumer _rd_kafka
     cdef ConsumerThread _consumer_thread
 
-    cdef object message_handlers
-    cdef object loop
+    cdef object _loop
     cdef object _open_tasks_task
     cdef object _spawn_tasks
     cdef bint _debug
 
-    cdef object async_iterator
+    cdef object _async_iterator
 
     def __cinit__(self, brokers, topic, group_id=None, consumer_settings=None,
                   topic_settings=None, loop=None, debug=False):
-        self._rd_kafka = RdKafkaStructs(
+        self._rd_kafka = RdKafkaConsumer(
             brokers=brokers, group_id=group_id, consumer_settings=consumer_settings,
             topic_settings=topic_settings
         )
-        self._rd_kafka.add_topic(topic)
+        self._rd_kafka.add_topic(topic.encode())
         self._consumer_thread = ConsumerThread(self._rd_kafka, debug=debug)
-        self.loop = loop if loop else asyncio.get_event_loop()
-        self.async_iterator = ConsumerAsyncIterator(
+        self._loop = loop if loop else asyncio.get_event_loop()
+        self._async_iterator = ConsumerAsyncIterator(
             self._consumer_thread.thread_communication_list,
-            self.get_message,
-            self.destroy_message,
-            self.loop
+            self._get_message,
+            self._destroy_message,
+            self._loop
         )
         self._debug = 1 if debug else 0
 
     def start(self):
-        self._rd_kafka.start_rd_kafka_consumer()
+        self._rd_kafka.start()
         self._consumer_thread.start()
 
     def stop(self):
-        self._rd_kafka.start_rd_kafka_consumer()
+        self._async_iterator.stop()
         self._consumer_thread.stop()
-        self.async_iterator.stop()
+        self._rd_kafka.stop()
 
     def __aiter__(self):
-        return self.async_iterator
+        return self._async_iterator.get_aiter()
 
-    cpdef bytes get_message(self, long message_memory_address):
+    cpdef bytes _get_message(self, long message_memory_address):
         rkmessage = <rdkafka.rd_kafka_message_t*> message_memory_address
         payload_ptr = <char*>rkmessage.payload
         payload_len = rkmessage.len
         return payload_ptr[:payload_len]
 
-    cpdef destroy_message(self, long message_memory_address):
+    cpdef _destroy_message(self, long message_memory_address):
         rkmessage = <rdkafka.rd_kafka_message_t*> message_memory_address
         rdkafka.rd_kafka_message_destroy(rkmessage)
         self._consumer_thread.decrease_consumption_limiter()

@@ -259,6 +259,16 @@ cdef extern from "librdkafka/rdkafka.h":
     rd_kafka_message_t *rd_kafka_consumer_poll(rd_kafka_t *rk, int timeout_ms)
 
     void rd_kafka_message_destroy(rd_kafka_message_t *rkmessage)
+    void rd_kafka_conf_destroy(rd_kafka_conf_t *conf)
+    void rd_kafka_topic_conf_destroy(rd_kafka_topic_conf_t *topic_conf)
+    void rd_kafka_topic_partition_destroy (rd_kafka_topic_partition_t *rktpar)
+    void rd_kafka_topic_partition_list_destroy (
+            rd_kafka_topic_partition_list_t *rkparlist)
+    void rd_kafka_destroy(rd_kafka_t *rk)
+    void rd_kafka_topic_destroy(rd_kafka_topic_t *rkt)
+    rd_kafka_resp_err_t rd_kafka_consumer_close (rd_kafka_t *rk)
+    int rd_kafka_consume_stop(rd_kafka_topic_t *rkt, int32_t partition)
+
 
     rd_kafka_resp_err_t rd_kafka_subscribe (
             rd_kafka_t *rk,

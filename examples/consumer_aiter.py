@@ -8,7 +8,7 @@ sys.path.append('.')
 
 import time
 
-from asynckafka import Consumer
+from asynckafka import StreamConsumer
 
 import logging
 import sys
@@ -24,21 +24,23 @@ async def print_messages():
         print(messages, time.time())
 
 
-async def message_handler_my_topic(message):
-    global messages
-    messages += 1
+async def consume_messages():
+    async for message in consumer:
+        global messages
+        messages += 1
 
 
 loop = asyncio.get_event_loop()
-consumer = Consumer(
+consumer = StreamConsumer(
     brokers="127.0.0.1:9092",
+    topic='my_topic',
     group_id='my_group',
     loop=loop,
-    spawn_tasks=False,
     debug=False
 )
-consumer.add_message_handler('my_topic', message_handler_my_topic)
 consumer.start()
+
+asyncio.ensure_future(consume_messages(), loop=loop)
 asyncio.ensure_future(print_messages(), loop=loop)
 
 try:

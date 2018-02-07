@@ -32,7 +32,7 @@ class ConsumerAsyncIterator:
         self._stop = False
         self.loop = loop
 
-    async def __anext__(self):
+    async def get_aiter(self):
         while not self._stop:
             try:
                 try:
