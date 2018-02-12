@@ -4,7 +4,6 @@ import logging
 
 from asynckafka.consumers.rd_kafka_consumer cimport RdKafkaConsumer
 from asynckafka.consumers.consumer_thread cimport ConsumerThread
-from asynckafka.consumers.consumer_aiter import ConsumerAsyncIterator
 from asynckafka.includes cimport c_rd_kafka as crdk
 from asynckafka import exceptions
 
@@ -123,31 +122,18 @@ cdef class Consumer:
 
 
 cdef class StreamConsumer:
-    cdef RdKafkaConsumer _rd_kafka
-    cdef ConsumerThread _consumer_thread
-
-    cdef object _loop
-    cdef object _open_tasks_task
-    cdef object _spawn_tasks
-    cdef bint _debug
-
-    cdef object _async_iterator
 
     def __cinit__(self, brokers, topic, group_id=None, consumer_settings=None,
                   topic_settings=None, loop=None, debug=False):
         self._rd_kafka = RdKafkaConsumer(
-            brokers=brokers, group_id=group_id, consumer_settings=consumer_settings,
-            topic_settings=topic_settings
+            brokers=brokers, group_id=group_id, topic_settings=topic_settings,
+            consumer_settings=consumer_settings
         )
-        self._rd_kafka.add_topic(topic.encode())
+        self._topic = topic.encode()
+        self._rd_kafka.add_topic(self._topic)
         self._consumer_thread = ConsumerThread(self._rd_kafka, debug=debug)
         self._loop = loop if loop else asyncio.get_event_loop()
-        self._async_iterator = ConsumerAsyncIterator(
-            self._consumer_thread.thread_communication_list,
-            self._get_message,
-            self._destroy_message,
-            self._loop
-        )
+        self._stop = False
         self._debug = 1 if debug else 0
 
     def start(self):
@@ -155,21 +141,40 @@ cdef class StreamConsumer:
         self._consumer_thread.start()
 
     def stop(self):
-        self._async_iterator.stop()
+        self._stop = True
         self._consumer_thread.stop()
         self._rd_kafka.stop()
 
     def __aiter__(self):
-        return self._async_iterator.get_aiter()
+        return self
 
-    cpdef bytes _get_message(self, long message_memory_address):
-        rkmessage = <crdk.rd_kafka_message_t*> message_memory_address
-        payload_ptr = <char*>rkmessage.payload
-        payload_len = rkmessage.len
-        return payload_ptr[:payload_len]
+    async def __anext__(self):
+        cdef long message_memory_address
+        while not self._stop:
+            try:
+                try:
+                    message_memory_address = \
+                        self._consumer_thread.thread_communication_list.pop()
+                except IndexError:
+                    await asyncio.sleep(0.01, loop=self._loop)
+                else:
+                    rk_message = \
+                        <crdk.rd_kafka_message_t*> message_memory_address
+                    payload_ptr = <char*>rk_message.payload
+                    payload_len = rk_message.len
+                    payload = payload_ptr[:payload_len]
+                    message_memory_view = memoryview(payload)
+                    self._destroy_message(message_memory_address)
+                    return message_memory_view
+            except Exception:
+                error_str = "Unexpected exception consuming messages from " \
+                            "thread in async iterator consumer"
+                logger.error(error_str, exc_info=True)
+                raise
+        raise StopAsyncIteration
 
-    cpdef _destroy_message(self, long message_memory_address):
-        rkmessage = <crdk.rd_kafka_message_t*> message_memory_address
-        crdk.rd_kafka_message_destroy(rkmessage)
+    cdef _destroy_message(self, long message_memory_address):
+        rk_message = <crdk.rd_kafka_message_t*> message_memory_address
+        crdk.rd_kafka_message_destroy(rk_message)
         self._consumer_thread.decrease_consumption_limiter()
 

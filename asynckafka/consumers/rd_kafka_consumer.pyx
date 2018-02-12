@@ -65,7 +65,8 @@ cdef class RdKafkaConsumer:
         consumer_settings = consumer_settings if consumer_settings else {}
         if group_id:
             consumer_settings['group.id'] = group_id
-        self.consumer_settings = self._parse_and_encode_settings(consumer_settings)
+        self.consumer_settings = self._parse_and_encode_settings(
+            consumer_settings)
 
         topic_settings = topic_settings if topic_settings else {}
         if 'group.id' in consumer_settings:
@@ -73,10 +74,16 @@ cdef class RdKafkaConsumer:
         self.topic_settings = self._parse_and_encode_settings(topic_settings)
 
     def _parse_settings(self, config: dict) -> dict:
-        return {key.replace("_", "."): value for key, value in config.items()}
+        return {
+            key.replace("_", "."): value
+            for key, value in config.items()
+        }
 
     def _encode_settings(self, settings: dict) -> dict:
-        return {key.encode(): value.encode() for key, value in settings.items()}
+        return {
+            key.encode(): value.encode()
+            for key, value in settings.items()
+        }
 
     def _parse_and_encode_settings(self, settings: dict) -> dict:
         parsed_settings = self._parse_settings(settings)
