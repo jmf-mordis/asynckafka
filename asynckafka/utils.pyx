@@ -1,4 +1,4 @@
-cimport rdkafka
+from asynckafka.includes cimport c_rd_kafka as rdkafka
 
 
 def check_rdkafka_version():
