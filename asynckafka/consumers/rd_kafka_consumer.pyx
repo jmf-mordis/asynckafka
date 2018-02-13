@@ -9,20 +9,23 @@ logger = logging.getLogger('asynckafka')
 
 cdef void cb_logger(const crdk.rd_kafka_t *rk, int level, const char *fac,
                     const char *buf):
+    fac_str = str(fac)
+    buf_str = str(buf)
     if level in {1, 2}:
-        logger.critical(f"{str(fac)}:{str(buf)}")
+        logger.critical(f"{fac_str}:{buf_str}")
     elif level == 3:
-        logger.error(f"{str(fac)}:{str(buf)}")
+        logger.error(f"{fac_str}:{buf_str)}")
     elif level in {4, 5}:
-        logger.info(f"{str(fac)}:{str(buf)}")
-    elif level in {6, 7} :
-        logger.debug(f"{str(fac)}:{str(buf)}")
+        logger.info(f"{fac_str}:{buf_str}")
+    elif level in {6, 7}:
+        logger.debug(f"{fac_str}:{buf_str}")
     else:
         logger.critical(f"Unexpected logger level {level}")
-        logger.critical(f"{fac}:{buf}")
+        logger.critical(f"{fac_str}:{buf_str}")
 
 
-cdef log_partition_list(crdk.rd_kafka_topic_partition_list_t *partitions):
+cdef inline log_partition_list(
+        crdk.rd_kafka_topic_partition_list_t *partitions):
     string = "List of partitions:"
     for i in range(partitions.cnt):
         topic = partitions.elems[i].topic
@@ -73,6 +76,8 @@ cdef class RdKafkaConsumer:
             topic_settings["offset.store.method"] = "broker"
         self.topic_settings = self._parse_and_encode_settings(topic_settings)
 
+        self.status = consumer_states.NOT_STARTED
+
     @staticmethod
     def _parse_settings(config: dict) -> dict:
         return {
@@ -93,11 +98,16 @@ cdef class RdKafkaConsumer:
         return cls._encode_settings(parsed_settings)
 
     def start(self):
+        if not self.topics:
+            raise exceptions.ConsumerError(
+                "Starting rd kafka consumer without topics"
+            )
         self._init_rd_kafka_configs()
         self._init_rd_kafka_consumer_group()
         self._init_rd_kafka_consumer()
         self._init_rd_kafka_topic_partition_lists()
         self._init_rd_kafka_subscription()
+        self.status = consumer_states.STARTED
 
     def stop(self):
         logger.info('Triggered the stop of the rdkafka consumer')
@@ -113,6 +123,7 @@ cdef class RdKafkaConsumer:
         logger.info('Destroying rdkafka consumer')
         crdk.rd_kafka_destroy(self.consumer)
         logger.info('Rdkafka consumer destroyed correctly')
+        self.status = consumer_states.STOPPED
 
     def add_topic(self, topic: str):
         self.topics.append(topic.encode())

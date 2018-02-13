@@ -2,12 +2,12 @@ import logging
 import unittest
 
 from asynckafka import exceptions
-from asynckafka.consumers.rd_kafka_consumer cimport RdKafkaConsumer
-from asynckafka.consumers.rd_kafka_consumer import RdKafkaConsumer
+from asynckafka.consumers.rd_kafka_consumer cimport RdKafkaConsumer, \
+    consumer_states
 from asynckafka.includes cimport c_rd_kafka as crdk
 
 
-def consumer_factory() -> RdKafkaConsumer:
+cdef RdKafkaConsumer consumer_factory():
     return RdKafkaConsumer(
         brokers='127.0.0.1',
         group_id='my_test_group_id',
@@ -16,7 +16,7 @@ def consumer_factory() -> RdKafkaConsumer:
     )
 
 
-class TestRdKafkaConsumer(unittest.TestCase):
+class TestsUnitRdKafkaConsumer(unittest.TestCase):
 
     def test_instance_without_settings(self):
         rd_kafka_consumer = consumer_factory()
@@ -118,4 +118,25 @@ class TestRdKafkaConsumer(unittest.TestCase):
         rd_kafka_consumer = consumer_factory()
         rd_kafka_consumer.add_topic('my_topic')
         rd_kafka_consumer._init_rd_kafka_configs()
+
+    def test_start_without_topic(self):
+        rd_kafka_consumer = consumer_factory()
+        with self.assertRaises(exceptions.ConsumerError):
+            rd_kafka_consumer.start()
+        self.assertEqual(rd_kafka_consumer.status, consumer_states.NOT_STARTED)
+
+    def test_start_stop(self):
+        rd_kafka_consumer = consumer_factory()
+        rd_kafka_consumer.add_topic('my_topic')
+        self.assertEqual(rd_kafka_consumer.status, consumer_states.NOT_STARTED)
+        rd_kafka_consumer.start()
+        self.assertEqual(rd_kafka_consumer.status, consumer_states.STARTED)
+        rd_kafka_consumer.stop()
+        self.assertEqual(rd_kafka_consumer.status, consumer_states.STOPPED)
+
+    def test_cb_logger(self):
+        raise NotImplemented
+
+    def test_cb_rebalance(self):
+        raise NotImplemented
 

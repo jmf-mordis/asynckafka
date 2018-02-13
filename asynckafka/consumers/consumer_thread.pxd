@@ -15,16 +15,16 @@ cdef class ConsumerThread:
 
     cpdef _main_poll_rdkafka(self)
 
-    cdef _cb_consume_message(
+    cdef inline _cb_consume_message(
             self,
             crdk.rd_kafka_message_t *rk_message
     )
-    cdef _send_message_to_asyncio(
+    cdef inline _send_message_to_asyncio(
             self,
             crdk.rd_kafka_message_t *rk_message
     )
 
-    cdef increase_consumption_limiter(self)
+    cdef inline _increase_consumption_limiter(self)
     cdef inline decrease_consumption_limiter(self)
     cdef _destroy_remaining_messages(self)
 

@@ -38,11 +38,11 @@ cdef class ConsumerThread:
             logger.error(f"Unexpected exception in consumer thread. "
                          "Closing thread.", exc_info=True)
 
-    cdef _cb_consume_message(
+    cdef inline _cb_consume_message(
             self, crdk.rd_kafka_message_t *rk_message):
         if rk_message.err:
             if rk_message.err == crdk.RD_KAFKA_RESP_ERR__PARTITION_EOF:
-                if self._debug: logger.debug("Partition EOF")
+                if self._debug: logger.info("Partition EOF")
             elif rk_message.rkt:
                 err_message_str = crdk.rd_kafka_message_errstr(rk_message)
                 topic = crdk.rd_kafka_topic_name(rk_message.rkt)
@@ -69,11 +69,12 @@ cdef class ConsumerThread:
                 )
             self._send_message_to_asyncio(rk_message)
 
-    cdef _send_message_to_asyncio(self, crdk.rd_kafka_message_t *rkmessage):
+    cdef inline _send_message_to_asyncio(
+            self, crdk.rd_kafka_message_t *rkmessage):
         memory_address = <long> rkmessage
         while True:
             if self.consumption_limiter < settings.DEFAULT_MAX_COROUTINES:
-                self.increase_consumption_limiter()
+                self._increase_consumption_limiter()
                 self.thread_communication_list.append(memory_address)
                 if self._debug: logger.debug(
                     "Sent memory address of message from consumer "
@@ -86,10 +87,10 @@ cdef class ConsumerThread:
                 logger.debug("Consumer limit reached in consumer thread")
                 time.sleep(0.1)
 
-    cdef increase_consumption_limiter(self):
+    cdef inline _increase_consumption_limiter(self):
         self.consumption_limiter += 1
 
-    cdef decrease_consumption_limiter(self):
+    cdef inline decrease_consumption_limiter(self):
         self.consumption_limiter -= 1
 
     def start(self):
@@ -105,6 +106,12 @@ cdef class ConsumerThread:
         self._destroy_remaining_messages()
         logger.info('Destroyed all the remaining messages consumed by the '
                     'thread.')
+
+    def is_in_debug(self):
+        return True if self._debug else False
+
+    def change_debug(self, debug: bool):
+        self._debug = 1 if debug else 0
 
     cdef _destroy_remaining_messages(self):
         for _ in range(len(self.thread_communication_list)):

@@ -49,11 +49,11 @@ cdef class Consumer:
                             await self._call_message_handler(
                                 message_memory_address)
                         finally:
-                            rkmessage = <crdk.rd_kafka_message_t*> \
+                            rk_message = <crdk.rd_kafka_message_t*> \
                                 message_memory_address
                             self._consumer_thread.\
                                 decrease_consumption_limiter()
-                            crdk.rd_kafka_message_destroy(rkmessage)
+                            crdk.rd_kafka_message_destroy(rk_message)
             except asyncio.CancelledError:
                 logger.info("Poll consumer thread task canceled correctly")
                 return

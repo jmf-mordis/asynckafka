@@ -9,7 +9,7 @@ cdef void cb_logger(
 )
 
 
-cdef log_partition_list(
+cdef inline log_partition_list(
         crdk.rd_kafka_topic_partition_list_t *partitions
 )
 
@@ -19,6 +19,12 @@ cdef void cb_rebalance(
         crdk.rd_kafka_resp_err_t err,
         crdk.rd_kafka_topic_partition_list_t *partitions, void *opaque
 )
+
+
+ctypedef enum consumer_states:
+    NOT_STARTED
+    STARTED
+    STOPPED
 
 
 cdef class RdKafkaConsumer:
@@ -33,3 +39,4 @@ cdef class RdKafkaConsumer:
         public list topics
         public dict consumer_settings
         public dict topic_settings
+        public consumer_states status
