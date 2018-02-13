@@ -9,7 +9,7 @@ with open(os.path.join(os.path.dirname(__file__), 'readme.rst')) as f:
 
 setup(
     name="asynckafka",
-    description='fast python kafka library for asyncio.',
+    description='Fast python kafka library for asyncio.',
     long_description=readme,
     url='http://github.com/jmf-mordis/asynckafka',
     license='mit',
@@ -43,6 +43,11 @@ setup(
             Extension(
                 "asynckafka.producer.producer",
                 ["asynckafka/producer/producer.pyx"],
+                libraries=["rdkafka"]
+            ),
+            Extension(
+                "tests.asynckafka_tests",
+                ["tests/asynckafka_tests.pyx"],
                 libraries=["rdkafka"]
             ),
         ]

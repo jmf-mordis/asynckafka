@@ -16,7 +16,8 @@ cdef class Consumer:
                   topic_settings=None, message_handlers=None, loop=None,
                   spawn_tasks=True, debug=False):
         self._rdk_consumer = RdKafkaConsumer(
-            brokers=brokers, group_id=group_id, consumer_settings=consumer_settings,
+            brokers=brokers, group_id=group_id,
+            consumer_settings=consumer_settings,
             topic_settings=topic_settings
         )
         self._consumer_thread = ConsumerThread(self._rdk_consumer, debug=debug)
