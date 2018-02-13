@@ -57,8 +57,8 @@ cdef void cb_rebalance(
 
 cdef class RdKafkaConsumer:
 
-    def __cinit__(self, brokers, group_id, consumer_settings,
-                  topic_settings):
+    def __cinit__(self, brokers: str, group_id: str, consumer_settings: dict,
+                  topic_settings: dict):
         self.topics = []
         self.brokers = brokers.encode()
 
@@ -73,21 +73,24 @@ cdef class RdKafkaConsumer:
             topic_settings["offset.store.method"] = "broker"
         self.topic_settings = self._parse_and_encode_settings(topic_settings)
 
-    def _parse_settings(self, config: dict) -> dict:
+    @staticmethod
+    def _parse_settings(config: dict) -> dict:
         return {
             key.replace("_", "."): value
             for key, value in config.items()
         }
 
-    def _encode_settings(self, settings: dict) -> dict:
+    @staticmethod
+    def _encode_settings(settings: dict) -> dict:
         return {
             key.encode(): value.encode()
             for key, value in settings.items()
         }
 
-    def _parse_and_encode_settings(self, settings: dict) -> dict:
-        parsed_settings = self._parse_settings(settings)
-        return self._encode_settings(parsed_settings)
+    @classmethod
+    def _parse_and_encode_settings(cls, settings: dict) -> dict:
+        parsed_settings = cls._parse_settings(settings)
+        return cls._encode_settings(parsed_settings)
 
     def start(self):
         self._init_rd_kafka_configs()
@@ -111,8 +114,8 @@ cdef class RdKafkaConsumer:
         crdk.rd_kafka_destroy(self.consumer)
         logger.info('Rdkafka consumer destroyed correctly')
 
-    def add_topic(self, topic):
-        self.topics.append(topic)
+    def add_topic(self, topic: str):
+        self.topics.append(topic.encode())
 
     def _init_rd_kafka_configs(self):
         self.conf = crdk.rd_kafka_conf_new()
@@ -135,16 +138,19 @@ cdef class RdKafkaConsumer:
             self.conf, self.topic_conf)
 
     @staticmethod
-    def _parse_rd_kafka_conf_response(conf_respose, key, value):
+    def _parse_rd_kafka_conf_response(conf_respose: int, key: bytes,
+                                      value: bytes):
+        key_str = key.decode()
+        value_str = key.decode()
         if conf_respose == crdk.RD_KAFKA_CONF_OK:
-            logger.debug(f"Correctly configured rdkafka {key} with value "
-                         f"{value}")
+            logger.debug(f"Correctly configured rdkafka {key_str} with value "
+                         f"{value_str}")
         elif conf_respose == crdk.RD_KAFKA_CONF_INVALID:
-            err_str = f"Invalid {key} setting with value: {value}"
+            err_str = f"Invalid {key_str} setting with value: {value_str}"
             logger.error(err_str)
             raise exceptions.InvalidSetting(err_str)
         elif conf_respose == crdk.RD_KAFKA_CONF_UNKNOWN:
-            err_str = f"Unknown {value} setting with value {value}"
+            err_str = f"Unknown {value_str} setting with value {value_str}"
             logger.error(err_str)
             raise exceptions.UnknownSetting(err_str)
 

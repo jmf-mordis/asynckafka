@@ -1,1 +1,2 @@
-include "./consumers/test_rd_kafka_consumer.pyx"
+include "./unit_tests/consumers/rd_kafka_consumer_tests.pyx"
+include "./integration_tests/consumers/rd_kafka_consumer_tests.pyx"

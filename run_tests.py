@@ -1,6 +1,6 @@
 import unittest
 
-from tests.asynckafka_tests import *
+from tests.tests_asynckafka import *
 
 
 unittest.main()

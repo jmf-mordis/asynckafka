@@ -22,13 +22,14 @@ cdef void cb_rebalance(
 
 
 cdef class RdKafkaConsumer:
-    cdef crdk.rd_kafka_t *consumer
-    cdef crdk.rd_kafka_conf_t *conf
-    cdef crdk.rd_kafka_topic_conf_t *topic_conf
-    cdef crdk.rd_kafka_topic_partition_list_t *topic_partition_list
-    cdef char errstr[512]
+    cdef:
+        crdk.rd_kafka_t *consumer
+        crdk.rd_kafka_conf_t *conf
+        crdk.rd_kafka_topic_conf_t *topic_conf
+        crdk.rd_kafka_topic_partition_list_t *topic_partition_list
+        char errstr[512]
 
-    cdef bytes brokers
-    cdef list topics
-    cdef dict consumer_settings
-    cdef dict topic_settings
+        bytes brokers
+        public list topics
+        public dict consumer_settings
+        public dict topic_settings
