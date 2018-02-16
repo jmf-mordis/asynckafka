@@ -118,7 +118,7 @@ cdef class Consumer:
     def add_message_handler(self, topic, message_handler):
         logger.info(f"Added message handler for topic {topic}")
         encoded_topic = topic.encode()
-        self._rdk_consumer.add_topic(encoded_topic)
+        self._rdk_consumer.add_topic(topic)
         self.message_handlers[encoded_topic] = message_handler
 
 
@@ -131,7 +131,7 @@ cdef class StreamConsumer:
             consumer_settings=consumer_settings
         )
         self._topic = topic.encode()
-        self._rd_kafka.add_topic(self._topic)
+        self._rd_kafka.add_topic(topic)
         self._consumer_thread = ConsumerThread(self._rd_kafka, debug=debug)
         self._loop = loop if loop else asyncio.get_event_loop()
         self._stop = False

@@ -9,8 +9,8 @@ logger = logging.getLogger('asynckafka')
 
 cdef void cb_logger(const crdk.rd_kafka_t *rk, int level, const char *fac,
                     const char *buf):
-    fac_str = str(fac)
-    buf_str = str(buf)
+    fac_str = bytes(fac).decode()
+    buf_str = bytes(buf).decode()
     if level in {1, 2}:
         logger.critical(f"{fac_str}:{buf_str}")
     elif level == 3:
@@ -60,14 +60,14 @@ cdef void cb_rebalance(
 
 cdef class RdKafkaConsumer:
 
-    def __cinit__(self, brokers: str, group_id: str, consumer_settings: dict,
-                  topic_settings: dict):
+    def __cinit__(self, brokers: str, consumer_settings: dict,
+                  topic_settings: dict, group_id=None):
         self.topics = []
         self.brokers = brokers.encode()
 
         consumer_settings = consumer_settings if consumer_settings else {}
-        if group_id:
-            consumer_settings['group.id'] = group_id
+        consumer_settings['group.id'] = group_id if group_id else \
+            "default_consumer_group"
         self.consumer_settings = self._parse_and_encode_settings(
             consumer_settings)
 
@@ -134,7 +134,10 @@ cdef class RdKafkaConsumer:
         self.topic_conf = crdk.rd_kafka_topic_conf_new()
         for key, value in self.consumer_settings.items():
             conf_resp = crdk.rd_kafka_conf_set(
-                self.conf, key, value, self.errstr, sizeof(self.errstr)
+                self.conf,
+                key, value,
+                self.errstr,
+                sizeof(self.errstr)
             )
             self._parse_rd_kafka_conf_response(conf_resp, key, value)
         for key, value in self.topic_settings.items():
@@ -145,8 +148,6 @@ cdef class RdKafkaConsumer:
                 sizeof(self.errstr)
             )
             self._parse_rd_kafka_conf_response(conf_resp, key, value)
-        crdk.rd_kafka_conf_set_default_topic_conf(
-            self.conf, self.topic_conf)
 
     @staticmethod
     def _parse_rd_kafka_conf_response(conf_respose: int, key: bytes,
@@ -164,13 +165,18 @@ cdef class RdKafkaConsumer:
             err_str = f"Unknown {value_str} setting with value {value_str}"
             logger.error(err_str)
             raise exceptions.UnknownSetting(err_str)
+        else:
+            err_str = "Unexpected response configuring settings"
+            logger.error(err_str)
+            raise exceptions.ConsumerError(err_str)
 
     def _init_rd_kafka_consumer_group(self):
-        if b'group.id' in self.consumer_settings:
-            crdk.rd_kafka_conf_set_rebalance_cb(
-                self.conf,
-                cb_rebalance
-            )
+        crdk.rd_kafka_conf_set_rebalance_cb(
+            self.conf,
+            cb_rebalance
+        )
+        crdk.rd_kafka_conf_set_default_topic_conf(
+            self.conf, self.topic_conf)
 
     def _init_rd_kafka_consumer(self):
         self.consumer = crdk.rd_kafka_new(
@@ -219,4 +225,5 @@ cdef class RdKafkaConsumer:
             error_str = crdk.rd_kafka_err2str(err)
             logger.error(f"Error subscribing to topic: {error_str}")
             raise exceptions.SubscriptionError(error_str)
-        logger.debug("Subscribed to topic ")
+        logger.debug("Subscribed to topics ")
+

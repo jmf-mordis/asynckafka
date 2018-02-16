@@ -7,12 +7,14 @@ from asynckafka.includes cimport c_rd_kafka as crdk
 
 
 cdef RdKafkaConsumer rd_kafka_consumer_factory():
-    return RdKafkaConsumer(
+    rd_kafka_consumer = RdKafkaConsumer(
         brokers='127.0.0.1',
         group_id='my_test_group_id',
         consumer_settings={},
         topic_settings={},
     )
+    rd_kafka_consumer.add_topic("my_test_topic")
+    return rd_kafka_consumer
 
 cdef ConsumerThread consumer_thread_factory():
     return ConsumerThread(

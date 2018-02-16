@@ -44,8 +44,8 @@ cdef class ConsumerThread:
             if rk_message.err == crdk.RD_KAFKA_RESP_ERR__PARTITION_EOF:
                 if self._debug: logger.info("Partition EOF")
             elif rk_message.rkt:
-                err_message_str = crdk.rd_kafka_message_errstr(rk_message)
-                topic = crdk.rd_kafka_topic_name(rk_message.rkt)
+                err_message_str = str(crdk.rd_kafka_message_errstr(rk_message))
+                topic = str(crdk.rd_kafka_topic_name(rk_message.rkt))
                 logger.error(
                     f"Consumer error in kafka topic {topic}, "
                     f"partition {rk_message.partition}, "
