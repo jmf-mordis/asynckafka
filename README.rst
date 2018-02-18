@@ -2,13 +2,13 @@
 Asynckafka
 **********
 
-Fast python kafka library for asyncio. 
-Asyncafka is written in cython and essentially provides an user
-friendly interface for use rdkafka with asyncio.
+Fast python kafka library for asyncio.
+Asynckafka is written in cython and essentially use cython as a glue language
+to allow using rdkafka with asyncio.
 
 Right now it is work in progress and it's little more than a proof of concept,
 please don't use it in production, or use it at our own risk. I also do not
-guarantee stability in the api during this period.
+guarantee stability in the api in the next months.
 
 Performance
 ###########
@@ -19,9 +19,6 @@ natively asyncio.
 
 On the other hand, the asyncio libraries that i tested do not offer a good
 enough performance for some applications.
-
-
-WIP
 
 
 Using Asynckafka

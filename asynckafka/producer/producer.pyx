@@ -85,7 +85,7 @@ cdef class Producer:
             if resp == -1:
                 error = crdk.rd_kafka_last_error()
                 if self._debug:
-                    logger.debug(crdk.rd_kafka_err2str(error))
+                    logger.debug(crdk.rd_kafka_err2str(error).decode())
                 if error == crdk.RD_KAFKA_RESP_ERR__QUEUE_FULL:
                     if self._debug:
                         logger.debug(

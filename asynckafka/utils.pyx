@@ -42,7 +42,7 @@ def parse_and_encode_settings(settings: dict) -> dict:
 def parse_rd_kafka_conf_response(conf_respose: int, key: bytes,
                                   value: bytes):
     key_str = key.decode()
-    value_str = key.decode()
+    value_str = value.decode()
     if conf_respose == crdk.RD_KAFKA_CONF_OK:
         logger.debug(f"Correctly configured rdkafka {key_str} with value "
                      f"{value_str}")
