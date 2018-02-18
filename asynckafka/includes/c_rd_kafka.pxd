@@ -14,7 +14,7 @@ cdef extern from "librdkafka/rdkafka.h":
     ctypedef enum rd_kafka_conf_res_t:
         RD_KAFKA_CONF_UNKNOWN = -2  # Unknown configuration name
         RD_KAFKA_CONF_INVALID = -1  # Invalid configuration value
-        RD_KAFKA_CONF_OK = 0  # Configuration okay
+        RD_KAFKA_CONF_OK = 0        # Configuration okay
 
     rd_kafka_conf_t *rd_kafka_conf_new()
 
@@ -250,13 +250,15 @@ cdef extern from "librdkafka/rdkafka.h":
 
     rd_kafka_resp_err_t rd_kafka_poll_set_consumer (rd_kafka_t *rk)
 
-    rd_kafka_topic_partition_list_t *rd_kafka_topic_partition_list_new(int size)
+    rd_kafka_topic_partition_list_t *rd_kafka_topic_partition_list_new(
+            int size)
     rd_kafka_topic_partition_t *rd_kafka_topic_partition_list_add(
             rd_kafka_topic_partition_list_t *rktparlist,
             const char *topic, int32_t partition
     )
 
     rd_kafka_message_t *rd_kafka_consumer_poll(rd_kafka_t *rk, int timeout_ms)
+    int rd_kafka_poll(rd_kafka_t *rk, int timeout_ms)
 
     void rd_kafka_message_destroy(rd_kafka_message_t *rkmessage)
     void rd_kafka_conf_destroy(rd_kafka_conf_t *conf)
@@ -276,3 +278,6 @@ cdef extern from "librdkafka/rdkafka.h":
     )
 
     const char *rd_kafka_version_str ()
+
+    rd_kafka_resp_err_t rd_kafka_last_error ()
+    rd_kafka_resp_err_t rd_kafka_flush (rd_kafka_t *rk, int timeout_ms)

@@ -29,10 +29,16 @@ cdef class Consumer:
         }
         self.loop = loop if loop else asyncio.get_event_loop()
         self._poll_consumer_thread_task = None
-        self._debug = 1 if debug else 0
+        self.set_debug(debug)
         self._spawn_tasks = spawn_tasks
         self._consumer_state = consumer_states.NOT_CONSUMING
 
+    def set_debug(self, debug:bool):
+        self._debug = 1 if debug else 0
+        self._consumer_thread.set_debug(debug)
+
+    def is_in_debug(self):
+        return self._debug == 1
 
     async def _poll_consumer_thread(self):
         cdef long message_memory_address
@@ -153,7 +159,7 @@ cdef class StreamConsumer:
         self._consumer_thread = ConsumerThread(self._rd_kafka, debug=debug)
         self._loop = loop if loop else asyncio.get_event_loop()
         self._stop = False
-        self._debug = 1 if debug else 0
+        self.set_debug(debug)
         self._consumer_state = consumer_states.NOT_CONSUMING
 
     def start(self):
@@ -179,6 +185,13 @@ cdef class StreamConsumer:
 
     def is_consuming(self):
         return self._consumer_state == consumer_states.CONSUMING
+
+    def set_debug(self, debug:bool):
+        self._debug = 1 if debug else 0
+        self._consumer_thread.set_debug(debug)
+
+    def is_in_debug(self):
+        return self._debug == 1
 
     def __aiter__(self):
         return self

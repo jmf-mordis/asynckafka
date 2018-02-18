@@ -17,3 +17,7 @@ class SubscriptionError(Exception):
 
 class ConsumerError(Exception):
     pass
+
+
+class ProducerError(Exception):
+    pass

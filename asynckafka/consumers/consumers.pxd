@@ -17,8 +17,7 @@ cdef class Consumer:
         object loop
         object _poll_consumer_thread_task
         object _spawn_tasks
-        bint _debug
-
+        char _debug
 
         _open_asyncio_task(self, long message_memory_address)
 
@@ -33,7 +32,7 @@ cdef class StreamConsumer:
         object _stop
         object _open_tasks_task
         object _spawn_tasks
-        bint _debug
+        char _debug
         object _topic
 
         _destroy_message(self, long message_memory_address)

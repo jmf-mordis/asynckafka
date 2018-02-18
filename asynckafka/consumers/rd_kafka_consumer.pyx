@@ -3,6 +3,7 @@ from libc.stdint cimport int32_t
 
 from asynckafka.includes cimport c_rd_kafka as crdk
 from asynckafka import exceptions
+from asynckafka import utils
 
 logger = logging.getLogger('asynckafka')
 
@@ -68,34 +69,15 @@ cdef class RdKafkaConsumer:
         consumer_settings = consumer_settings if consumer_settings else {}
         consumer_settings['group.id'] = group_id if group_id else \
             "default_consumer_group"
-        self.consumer_settings = self._parse_and_encode_settings(
+        self.consumer_settings = utils.parse_and_encode_settings(
             consumer_settings)
 
         topic_settings = topic_settings if topic_settings else {}
         if 'group.id' in consumer_settings:
             topic_settings["offset.store.method"] = "broker"
-        self.topic_settings = self._parse_and_encode_settings(topic_settings)
+        self.topic_settings = utils.parse_and_encode_settings(topic_settings)
 
         self.status = consumer_states.NOT_STARTED
-
-    @staticmethod
-    def _parse_settings(config: dict) -> dict:
-        return {
-            key.replace("_", "."): value
-            for key, value in config.items()
-        }
-
-    @staticmethod
-    def _encode_settings(settings: dict) -> dict:
-        return {
-            key.encode(): value.encode()
-            for key, value in settings.items()
-        }
-
-    @classmethod
-    def _parse_and_encode_settings(cls, settings: dict) -> dict:
-        parsed_settings = cls._parse_settings(settings)
-        return cls._encode_settings(parsed_settings)
 
     def start(self):
         if not self.topics:
@@ -139,7 +121,7 @@ cdef class RdKafkaConsumer:
                 self.errstr,
                 sizeof(self.errstr)
             )
-            self._parse_rd_kafka_conf_response(conf_resp, key, value)
+            utils.parse_rd_kafka_conf_response(conf_resp, key, value)
         for key, value in self.topic_settings.items():
             conf_resp = crdk.rd_kafka_topic_conf_set(
                 self.topic_conf,
@@ -147,28 +129,8 @@ cdef class RdKafkaConsumer:
                 self.errstr,
                 sizeof(self.errstr)
             )
-            self._parse_rd_kafka_conf_response(conf_resp, key, value)
+            utils.parse_rd_kafka_conf_response(conf_resp, key, value)
 
-    @staticmethod
-    def _parse_rd_kafka_conf_response(conf_respose: int, key: bytes,
-                                      value: bytes):
-        key_str = key.decode()
-        value_str = key.decode()
-        if conf_respose == crdk.RD_KAFKA_CONF_OK:
-            logger.debug(f"Correctly configured rdkafka {key_str} with value "
-                         f"{value_str}")
-        elif conf_respose == crdk.RD_KAFKA_CONF_INVALID:
-            err_str = f"Invalid {key_str} setting with value: {value_str}"
-            logger.error(err_str)
-            raise exceptions.InvalidSetting(err_str)
-        elif conf_respose == crdk.RD_KAFKA_CONF_UNKNOWN:
-            err_str = f"Unknown {value_str} setting with value {value_str}"
-            logger.error(err_str)
-            raise exceptions.UnknownSetting(err_str)
-        else:
-            err_str = "Unexpected response configuring settings"
-            logger.error(err_str)
-            raise exceptions.ConsumerError(err_str)
 
     def _init_rd_kafka_consumer_group(self):
         crdk.rd_kafka_conf_set_rebalance_cb(
@@ -198,12 +160,6 @@ cdef class RdKafkaConsumer:
             logger.error(err_str)
             raise exceptions.InvalidBrokers(err_str)
         logger.debug("Added brokers to kafka consumer")
-
-        err_poll = crdk.rd_kafka_poll_set_consumer(self.consumer)
-        if err_poll:
-            err_str_poll = crdk.rd_kafka_err2str(err_poll)
-            logger.error(err_str_poll)
-            raise exceptions.ConsumerError(err_str_poll)
 
     def _init_rd_kafka_topic_partition_lists(self):
         cdef int32_t partition

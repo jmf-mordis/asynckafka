@@ -1,68 +1,149 @@
-from asynckafka.includes cimport c_rd_kafka as rdk
+import logging
+
+import asyncio
+
+from asynckafka import exceptions
+from asynckafka.includes cimport c_rd_kafka as crdk
+from asynckafka import utils
 
 
-cdef void dr_msg_cb (
-        rdk.rd_kafka_t *rk, const rdk.rd_kafka_message_t *rkmessage,
-        void *opaque):
-    # TODO callback is not working well
-    err = rkmessage[0].err
-    if err:
-        print("Message delivery failed: ")
-        exit(1)
-    else:
-        print("Message delivered ")
+logger = logging.getLogger("asynckafka")
 
 
 cdef class Producer:
 
-    def __cinit__(self, brokers: str, topic: str):
-        self._init_config(brokers)
-        self._init_producer()
-        self._init_topic(topic)
+    def __cinit__(self, brokers: str, topic: str, producer_settings=None,
+                  debug=False, loop=None):
+        self.brokers = brokers.encode()
+        self.topic = topic.encode()
 
-    def _init_config(self, brokers: str):
-        brokers_bytes = brokers.encode()
-        self.conf = rdk.rd_kafka_conf_new()
-        rdk.rd_kafka_conf_set_dr_msg_cb(self.conf, dr_msg_cb)
-        conf_resp = rdk.rd_kafka_conf_set(self.conf, "bootstrap.servers",
-                                      brokers_bytes, self.errstr,
-                                      sizeof(self.errstr))
-        if conf_resp != 0:
-            print("Wrong response from settings")
-            exit(1)
+        producer_settings = producer_settings if producer_settings else {}
+        producer_settings['bootstrap.servers'] = brokers
+        self.producer_settings = utils.parse_and_encode_settings(
+            producer_settings
+        )
+
+        self.set_debug(debug)
+        self.producer_state = producer_states.STOPPED
+        self.loop = loop if loop else asyncio.get_event_loop()
+
+    def _init_rd_kafka_configs(self):
+        self._rd_kafka_conf = crdk.rd_kafka_conf_new()
+        for key, value in self.producer_settings.items():
+            conf_resp = crdk.rd_kafka_conf_set(
+                self._rd_kafka_conf,
+                key, value,
+                self.errstr,
+                sizeof(self.errstr)
+            )
+            utils.parse_rd_kafka_conf_response(conf_resp, key, value)
 
     def _init_producer(self):
-        self.kafka_producer = rdk.rd_kafka_new(rdk.RD_KAFKA_PRODUCER,
-                                               self.conf, self.errstr,
-                                               sizeof(self.errstr))
-        if not self.kafka_producer:
-            print("null kafka producer pointer")
-            exit(1)
-        print("initialized kafka producer")
-
-    def _init_topic(self, topic: str):
-        topic_bytes = topic.encode()
-        self.kafka_topic = rdk.rd_kafka_topic_new(self.kafka_producer,
-                                               topic_bytes, NULL)
-        if not self.kafka_topic:
-            print("Null kafka topic pointer")
-            exit(1)
-        print("initialized kafka topic")
-
-    def produce(self, message: str):
-        cdef bytes message_bytes = message.encode()
-        cdef char *message_ptr = message_bytes
-        resp = rdk.rd_kafka_produce(
-            self.kafka_topic,
-            rdk._RD_KAFKA_PARTITION_UA, rdk._RD_KAFKA_MSG_F_BLOCK,
-            message_ptr, len(message_bytes),
-            NULL, 0,
-            NULL
+        self._rd_kafka_producer = crdk.rd_kafka_new(
+            crdk.RD_KAFKA_PRODUCER,
+            self._rd_kafka_conf,
+            self.errstr,
+            sizeof(self.errstr)
         )
-        if resp == -1:
-            # TODO Proper error handling
-            print("Failed producing message")
-            exit(1)
-        print("Sent message")
+        if not self._rd_kafka_producer:
+            err_str = "Failed creating a rd kafka producer."
+            logger.error(err_str)
+            raise exceptions.ProducerError(err_str)
+        logger.info("Created producer.")
 
+    def _init_topic(self):
+        self._rd_kafka_topic = crdk.rd_kafka_topic_new(self._rd_kafka_producer,
+                                               self.topic, NULL)
+        if not self._rd_kafka_topic:
+            err_str = "Failed to create topic object."
+            logger.error(err_str)
+            logger.info("Destroying kafka producer.")
+            crdk.rd_kafka_destroy(self._rd_kafka_producer)
+            raise exceptions.ProducerError(err_str)
+        logger.info("Created kafka topic.")
 
+    async def _periodic_rd_kafka_poll(self):
+        while True:
+            await asyncio.sleep(1, loop=self.loop)
+            crdk.rd_kafka_poll(self._rd_kafka_producer, 0)
+
+    async def produce(self, message: bytes, key=None):
+        cdef char *message_ptr = message
+        cdef char *key_ptr
+        if key:
+            key_ptr = key
+        else:
+            key_ptr = NULL
+        while self.producer_state == producer_states.STARTED:
+            resp = crdk.rd_kafka_produce(
+                self._rd_kafka_topic,
+                crdk._RD_KAFKA_PARTITION_UA, crdk._RD_KAFKA_MSG_F_COPY,
+                message_ptr, len(message),
+                key_ptr, len(key) if key else 0,
+                NULL
+            )
+            if resp == -1:
+                error = crdk.rd_kafka_last_error()
+                if self._debug:
+                    logger.debug(crdk.rd_kafka_err2str(error))
+                if error == crdk.RD_KAFKA_RESP_ERR__QUEUE_FULL:
+                    if self._debug:
+                        logger.debug(
+                            "Rd kafka production queue is full "
+                            "waiting 0.1 seconds to retry."
+                        )
+                    await asyncio.sleep(0.1)
+                else:
+                    err_str = "Error producing message"
+                    logger.error(err_str)
+                    raise exceptions.ProducerError(err_str)
+            else:
+                if self._debug: logger.debug("Sent message")
+                return
+        else:
+            err_str = "Producer stopped without wait for delivery all " \
+                      "messages"
+            logger.warning(err_str)
+            raise exceptions.ProducerError(err_str)
+
+    def start(self):
+        if self.producer_state == producer_states.STOPPED:
+            self._init_rd_kafka_configs()
+            self._init_producer()
+            self._init_topic()
+            self._periodic_poll_task = asyncio.ensure_future(
+                self._periodic_rd_kafka_poll(),
+                loop=self.loop
+            )
+            self.producer_state = producer_states.STARTED
+        else:
+            error_str = "Tried to start a producer already started."
+            logger.error(error_str)
+            raise exceptions.ProducerError(error_str)
+
+    def stop(self):
+        logger.info("Called producer stop")
+        if self.producer_state == producer_states.STARTED:
+            self.producer_state = producer_states.STOPPED
+            logger.debug("Waiting to deliver all the remaining messages")
+            err = crdk.rd_kafka_flush(self._rd_kafka_producer, 10 * 1000)
+            if err != crdk.RD_KAFKA_RESP_ERR_NO_ERROR:
+                err_str = crdk.rd_kafka_err2str(err)
+                logger.error(err_str)
+                raise exceptions.ProducerError(err_str)
+            logger.debug("Destroying rd kafka structures")
+            crdk.rd_kafka_topic_destroy(self._rd_kafka_topic)
+            crdk.rd_kafka_destroy(self._rd_kafka_producer)
+            logger.debug("Canceling asyncio poll task")
+            self._periodic_poll_task.cancel()
+            logger.info("Producer stopped correctly")
+        else:
+            error_str = "Tried to stop a producer that is already stopped."
+            logger.error(error_str)
+            raise exceptions.ProducerError(error_str)
+
+    def set_debug(self, debug: bool):
+        self._debug = 1 if debug else 0
+
+    def is_in_debug(self):
+        return self._debug == 1

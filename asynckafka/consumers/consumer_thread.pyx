@@ -110,7 +110,7 @@ cdef class ConsumerThread:
     def is_in_debug(self):
         return True if self._debug else False
 
-    def change_debug(self, debug: bool):
+    def set_debug(self, debug: bool):
         self._debug = 1 if debug else 0
 
     cdef _destroy_remaining_messages(self):

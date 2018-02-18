@@ -33,7 +33,7 @@ class TestsUnitConsumerThread(unittest.TestCase):
 
     def test_change_debug(self):
         consumer_thread = consumer_thread_factory()
-        consumer_thread.change_debug(False)
+        consumer_thread.set_debug(False)
         self.assertFalse(consumer_thread.is_in_debug())
 
     def test_increase_consumption_limiter(self):
@@ -74,7 +74,7 @@ class TestsUnitConsumerThread(unittest.TestCase):
         cdef crdk.rd_kafka_message_t *poped_rk_message
         cdef long memory_address
         consumer_thread = consumer_thread_factory()
-        consumer_thread.change_debug(False)
+        consumer_thread.set_debug(False)
 
         payload = b"my_message"
         cdef char *payload_ptr = payload
