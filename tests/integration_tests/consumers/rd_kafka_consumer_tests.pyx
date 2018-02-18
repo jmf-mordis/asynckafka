@@ -7,12 +7,13 @@ import time
 import uuid
 from contextlib import closing
 
-from kafka import KafkaProducer
+from kafka import KafkaProducer, KafkaConsumer
 
 from asynckafka import exceptions
 from asynckafka.consumers.rd_kafka_consumer cimport RdKafkaConsumer
 from asynckafka.consumers.rd_kafka_consumer import RdKafkaConsumer
 from asynckafka.consumers.consumers cimport Consumer, StreamConsumer
+from asynckafka.producer.producer cimport Producer
 from asynckafka.includes cimport c_rd_kafka as crdk
 
 import os
@@ -229,3 +230,64 @@ class TestIntegrationStreamConsumer(IntegrationTestCase):
     def test_stop_without_start_raise_consumer_error(self):
         with self.assertRaises(exceptions.ConsumerError):
             self.stream_consumer.stop()
+
+
+class TestsIntegrationProducer(IntegrationTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.producer = Producer(
+            brokers="127.0.0.1",
+            topic=self.test_topic,
+            debug=True,
+            loop=self.loop
+        )
+
+    def tearDown(self):
+        if self.producer.is_started():
+            self.producer.stop()
+        super().tearDown()
+
+    def test_producer_start_stop(self):
+        self.producer.start()
+        self.producer.stop()
+
+    def test_produce_one_message(self):
+        consumer = KafkaConsumer(self.test_topic)
+
+        self.producer.start()
+        coro = self.producer.produce(self.test_message)
+        self.loop.run_until_complete(coro)
+
+        msg = next(consumer)
+
+        self.assertEqual(msg.value, self.test_message)
+
+    def test_produce_thousand_of_messages(self):
+        consumer = KafkaConsumer(self.test_topic)
+        self.producer.start()
+        n_messages = 1000
+
+        async def produce_messages():
+            for _ in range(n_messages):
+                await self.producer.produce(self.test_message)
+        self.loop.run_until_complete(produce_messages())
+
+        msgs = [next(consumer) for _ in range(n_messages)]
+        self.assertTrue(all([msg.value == self.test_message for msg in msgs]))
+
+    def test_two_starts_raise_producer_error(self):
+        self.producer.start()
+        with self.assertRaises(exceptions.ProducerError):
+            self.producer.start()
+
+    def test_stops_raise_producer_error(self):
+        self.producer.start()
+        self.producer.stop()
+        with self.assertRaises(exceptions.ProducerError):
+            self.producer.stop()
+
+    def test_stop_without_start_raise_producer_error(self):
+        with self.assertRaises(exceptions.ProducerError):
+            self.producer.stop()
+

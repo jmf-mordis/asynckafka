@@ -142,6 +142,9 @@ cdef class Producer:
             logger.error(error_str)
             raise exceptions.ProducerError(error_str)
 
+    def is_started(self):
+        return self.producer_state == producer_states.STARTED
+
     def set_debug(self, debug: bool):
         self._debug = 1 if debug else 0
 
