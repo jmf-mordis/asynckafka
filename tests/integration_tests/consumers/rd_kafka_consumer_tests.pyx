@@ -6,10 +6,12 @@ import asyncio
 import time
 import uuid
 from contextlib import closing
+from multiprocessing import Event
 
 from kafka import KafkaProducer, KafkaConsumer
 
 from asynckafka import exceptions
+from asynckafka.callbacks import set_error_callback
 from asynckafka.consumers.rd_kafka_consumer cimport RdKafkaConsumer
 from asynckafka.consumers.rd_kafka_consumer import RdKafkaConsumer
 from asynckafka.consumers.consumers cimport Consumer, StreamConsumer
@@ -150,6 +152,34 @@ class TestIntegrationConsumer(IntegrationTestCase):
         with self.assertRaises(exceptions.ConsumerError):
             self.consumer.stop()
 
+    def test_error_callback(self):
+        error_event = Event()
+
+        self.consumer = Consumer(
+            brokers="127.0.0.1:60000",
+            consumer_settings=test_consumer_settings,
+            topic_settings=test_topic_settings,
+            loop=self.loop,
+        )
+        async def message_handler(message):
+            pass
+        self.consumer.add_message_handler(self.test_topic, message_handler)
+
+        def error_callback(kafka_error):
+            error_event.set()
+
+        set_error_callback(error_callback)
+
+        async def wait_for_event():
+            while True:
+                await asyncio.sleep(0.5)
+                if error_event.is_set():
+                    break
+
+        self.consumer.start()
+        coro = asyncio.wait_for(wait_for_event(), timeout=10)
+        self.loop.run_until_complete(coro)
+
 
 class TestIntegrationStreamConsumer(IntegrationTestCase):
 
@@ -231,6 +261,32 @@ class TestIntegrationStreamConsumer(IntegrationTestCase):
         with self.assertRaises(exceptions.ConsumerError):
             self.stream_consumer.stop()
 
+    def test_error_callback(self):
+        error_event = Event()
+
+        self.stream_consumer = StreamConsumer(
+            brokers="127.0.0.1:60000",
+            topic=self.test_topic,
+            consumer_settings=test_consumer_settings,
+            topic_settings=test_topic_settings,
+            loop=self.loop,
+        )
+
+        def error_callback(kafka_error):
+            error_event.set()
+
+        set_error_callback(error_callback)
+
+        async def wait_for_event():
+            while True:
+                await asyncio.sleep(0.5)
+                if error_event.is_set():
+                    break
+
+        self.stream_consumer.start()
+        coro = asyncio.wait_for(wait_for_event(), timeout=10)
+        self.loop.run_until_complete(coro)
+
 
 class TestsIntegrationProducer(IntegrationTestCase):
 
@@ -290,4 +346,28 @@ class TestsIntegrationProducer(IntegrationTestCase):
     def test_stop_without_start_raise_producer_error(self):
         with self.assertRaises(exceptions.ProducerError):
             self.producer.stop()
+
+    def test_error_callback(self):
+        error_event = Event()
+
+        self.producer = Producer(
+            brokers="127.0.0.1:6000", #Wrong port
+            topic="my_test_topic",
+            debug=True,
+        )
+
+        def error_callback(kafka_error):
+            error_event.set()
+
+        set_error_callback(error_callback)
+
+        async def wait_for_event():
+            while True:
+                await asyncio.sleep(0.5)
+                if error_event.is_set():
+                    break
+
+        self.producer.start()
+        coro = asyncio.wait_for(wait_for_event(), timeout=10)
+        self.loop.run_until_complete(coro)
 

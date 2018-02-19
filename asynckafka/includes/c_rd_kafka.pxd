@@ -44,6 +44,16 @@ cdef extern from "librdkafka/rdkafka.h":
             )
     )
 
+    void rd_kafka_conf_set_error_cb(
+            rd_kafka_conf_t *conf,
+			void  (*error_cb) (
+                    rd_kafka_t *rk,
+                    int err,
+					const char *reason,
+					void *opaque
+            )
+    )
+
     ctypedef enum rd_kafka_resp_err_t:
         RD_KAFKA_RESP_ERR__BEGIN = -200
         RD_KAFKA_RESP_ERR__BAD_MSG = -199
@@ -281,3 +291,5 @@ cdef extern from "librdkafka/rdkafka.h":
 
     rd_kafka_resp_err_t rd_kafka_last_error ()
     rd_kafka_resp_err_t rd_kafka_flush (rd_kafka_t *rk, int timeout_ms)
+
+    const char *rd_kafka_name(const rd_kafka_t *rk)

@@ -13,6 +13,7 @@ extensions = [
     "asynckafka.consumers.rd_kafka_consumer",
     "asynckafka.consumers.consumer_thread",
     "asynckafka.consumers.consumers",
+    "asynckafka.callbacks",
     "asynckafka.utils",
     "asynckafka.producer.producer",
 ]

@@ -2,61 +2,11 @@ import logging
 from libc.stdint cimport int32_t
 
 from asynckafka.includes cimport c_rd_kafka as crdk
+from asynckafka.callbacks cimport cb_rebalance, cb_error, cb_logger
 from asynckafka import exceptions
 from asynckafka import utils
 
 logger = logging.getLogger('asynckafka')
-
-
-cdef void cb_logger(const crdk.rd_kafka_t *rk, int level, const char *fac,
-                    const char *buf):
-    fac_str = bytes(fac).decode()
-    buf_str = bytes(buf).decode()
-    if level in {1, 2}:
-        logger.critical(f"{fac_str}:{buf_str}")
-    elif level == 3:
-        logger.error(f"{fac_str}:{buf_str)}")
-    elif level in {4, 5}:
-        logger.info(f"{fac_str}:{buf_str}")
-    elif level in {6, 7}:
-        logger.debug(f"{fac_str}:{buf_str}")
-    else:
-        logger.critical(f"Unexpected logger level {level}")
-        logger.critical(f"{fac_str}:{buf_str}")
-
-
-cdef inline log_partition_list(
-        crdk.rd_kafka_topic_partition_list_t *partitions):
-    string = "List of partitions:"
-    for i in range(partitions.cnt):
-        topic = partitions.elems[i].topic
-        partition = partitions.elems[i].partition
-        offset = partitions.elems[i].offset
-        string += f" [Topic: {str(topic)}, " \
-                  f"Partition: {str(partition)}, " \
-                  f"Offset: {str(offset)}]"
-    logger.debug(string)
-
-
-cdef void cb_rebalance(
-        crdk.rd_kafka_t *rk, crdk.rd_kafka_resp_err_t err,
-        crdk.rd_kafka_topic_partition_list_t *partitions, void *opaque):
-    logger.debug("Consumer group rebalance")
-    if err == crdk.RD_KAFKA_RESP_ERR__ASSIGN_PARTITIONS:
-        logger.debug("New partitions assigned")
-        log_partition_list(partitions)
-        crdk.rd_kafka_assign(rk, partitions)
-    elif err == crdk.RD_KAFKA_RESP_ERR__REVOKE_PARTITIONS:
-        logger.debug("Revoked Partitions")
-        log_partition_list(partitions)
-        crdk.rd_kafka_assign(rk, NULL)
-    else:
-        err_str = crdk.rd_kafka_err2str(err)
-        logger.error(
-            f"Error in rebalance callback, "
-            f"Revoked partitions {err_str}"
-        )
-        crdk.rd_kafka_assign(rk, NULL)
 
 
 cdef class RdKafkaConsumer:
@@ -113,6 +63,7 @@ cdef class RdKafkaConsumer:
     def _init_rd_kafka_configs(self):
         self.conf = crdk.rd_kafka_conf_new()
         crdk.rd_kafka_conf_set_log_cb(self.conf, cb_logger)
+        crdk.rd_kafka_conf_set_error_cb(self.conf, cb_error)
         self.topic_conf = crdk.rd_kafka_topic_conf_new()
         for key, value in self.consumer_settings.items():
             conf_resp = crdk.rd_kafka_conf_set(

@@ -140,7 +140,7 @@ Install it with pip::
 Logging
 #######
 
-Asynckafka uses the standard logging library, the logger name is ""asynckafka".
+Asynckafka uses the standard logging library, the logger name is "asynckafka".
 
 For enable it to stdout is enough with::
 

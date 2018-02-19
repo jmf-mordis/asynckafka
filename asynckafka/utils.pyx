@@ -1,5 +1,6 @@
 import logging
 
+from asynckafka.exceptions import KafkaError
 from asynckafka.includes cimport c_rd_kafka as crdk
 from asynckafka import exceptions
 

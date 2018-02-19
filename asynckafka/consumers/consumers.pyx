@@ -63,11 +63,11 @@ cdef class Consumer:
                                 decrease_consumption_limiter()
                             crdk.rd_kafka_message_destroy(rk_message)
             except asyncio.CancelledError:
-                logger.info("Poll consumer thread task canceled correctly.")
+                logger.info("Poll consumer thread task canceled correctly")
                 return
             except Exception:
                 logger.critical(
-                    "Unexpected exception consuming messages from thread.",
+                    "Unexpected exception consuming messages from thread",
                     exc_info=True
                 )
                 raise
@@ -89,6 +89,11 @@ cdef class Consumer:
     def _cb_coroutine_counter_decrease(self, _):
         self._consumer_thread.decrease_consumption_limiter()
 
+    async def _periodic_rd_kafka_poll(self):
+        while True:
+            await asyncio.sleep(1, loop=self.loop)
+            crdk.rd_kafka_poll(self._rdk_consumer.consumer, 0)
+
     async def _call_message_handler(self, long message_memory_address):
         rkmessage = <crdk.rd_kafka_message_t*> message_memory_address
         payload_ptr = <char*>rkmessage.payload
@@ -98,43 +103,48 @@ cdef class Consumer:
             await self.message_handlers[topic](payload_ptr[:payload_len])
         except Exception:
             logger.error(f"Not captured exception in message handler "
-                         f"of topic {str(topic)}.", exc_info=True)
+                         f"of topic {str(topic)}", exc_info=True)
 
     def start(self):
         if not self.is_consuming():
             logger.debug("Starting asynckafka consumer")
             if not self.message_handlers:
                 logger.error("Asynckafka consumer can't be started without "
-                             "message handlers.")
+                             "message handlers")
                 raise exceptions.ConsumerError(
                     "At least one message handler is needed before start the "
-                    "consumer."
+                    "consumer"
                 )
             self._rdk_consumer.start()
             self._consumer_thread.start()
             self._poll_consumer_thread_task = asyncio.ensure_future(
                 self._poll_consumer_thread(), loop=self.loop
             )
+            self._poll_rd_kafka_task = asyncio.ensure_future(
+                self._periodic_rd_kafka_poll(), loop=self.loop
+            )
             logger.debug('Consumer started')
             self._consumer_state = consumer_states.CONSUMING
         else:
             logger.error("Tried to start a consumer that it is already "
                          "running")
-            raise exceptions.ConsumerError("Consumer is already running.")
+            raise exceptions.ConsumerError("Consumer is already running")
 
     def stop(self):
         if self.is_consuming():
-            logger.info("Stopping asynckafka consumer.")
-            logger.info("Closing poll consumer thread task.")
+            logger.info("Stopping asynckafka consumer")
+            logger.info("Closing poll consumer thread task")
             self._poll_consumer_thread_task.cancel()
+            logger.info("Closing rd kafka poll task")
+            self._poll_rd_kafka_task.cancel()
             self._consumer_thread.stop()
             self._rdk_consumer.stop()
-            logger.info("Stopped correctly asynckafka consumer.")
+            logger.info("Stopped correctly asynckafka consumer")
             self._consumer_state = consumer_states.NOT_CONSUMING
         else:
             logger.error("Tried to stop a consumer that it is already "
                          "stopped")
-            raise exceptions.ConsumerError("Consumer isn't running.")
+            raise exceptions.ConsumerError("Consumer isn't running")
 
     def is_consuming(self):
         return self._consumer_state == consumer_states.CONSUMING
@@ -166,22 +176,26 @@ cdef class StreamConsumer:
         if not self.is_consuming():
             self._rd_kafka.start()
             self._consumer_thread.start()
+            self._poll_rd_kafka_task = asyncio.ensure_future(
+                self._periodic_rd_kafka_poll(), loop=self._loop
+            )
             self._consumer_state = consumer_states.CONSUMING
         else:
             logger.error("Tried to start a consumer that it is already "
                          "running")
-            raise exceptions.ConsumerError("Consumer is already running.")
+            raise exceptions.ConsumerError("Consumer is already running")
 
     def stop(self):
         if self.is_consuming():
             self._stop = True
+            self._poll_rd_kafka_task.cancel()
             self._consumer_thread.stop()
             self._rd_kafka.stop()
             self._consumer_state = consumer_states.NOT_CONSUMING
         else:
             logger.error("Tried to stop a consumer that it is already "
                          "stopped")
-            raise exceptions.ConsumerError("Consumer isn't running.")
+            raise exceptions.ConsumerError("Consumer isn't running")
 
     def is_consuming(self):
         return self._consumer_state == consumer_states.CONSUMING
@@ -216,7 +230,7 @@ cdef class StreamConsumer:
                     return message_memory_view
             except Exception:
                 error_str = "Unexpected exception consuming messages from " \
-                            "thread in async iterator consumer."
+                            "thread in async iterator consumer"
                 logger.error(error_str, exc_info=True)
                 raise
         raise StopAsyncIteration
@@ -226,3 +240,7 @@ cdef class StreamConsumer:
         crdk.rd_kafka_message_destroy(rk_message)
         self._consumer_thread.decrease_consumption_limiter()
 
+    async def _periodic_rd_kafka_poll(self):
+        while True:
+            await asyncio.sleep(1, loop=self._loop)
+            crdk.rd_kafka_poll(self._rd_kafka.consumer, 0)

@@ -3,6 +3,7 @@ import logging
 import asyncio
 
 from asynckafka import exceptions
+from asynckafka.callbacks cimport cb_logger, cb_error
 from asynckafka.includes cimport c_rd_kafka as crdk
 from asynckafka import utils
 
@@ -29,6 +30,8 @@ cdef class Producer:
 
     def _init_rd_kafka_configs(self):
         self._rd_kafka_conf = crdk.rd_kafka_conf_new()
+        crdk.rd_kafka_conf_set_log_cb(self._rd_kafka_conf, cb_logger)
+        crdk.rd_kafka_conf_set_error_cb(self._rd_kafka_conf, cb_error)
         for key, value in self.producer_settings.items():
             conf_resp = crdk.rd_kafka_conf_set(
                 self._rd_kafka_conf,
@@ -46,21 +49,21 @@ cdef class Producer:
             sizeof(self.errstr)
         )
         if not self._rd_kafka_producer:
-            err_str = "Failed creating a rd kafka producer."
+            err_str = "Failed creating a rd kafka producer"
             logger.error(err_str)
             raise exceptions.ProducerError(err_str)
-        logger.info("Created producer.")
+        logger.info("Created producer")
 
     def _init_topic(self):
         self._rd_kafka_topic = crdk.rd_kafka_topic_new(self._rd_kafka_producer,
                                                self.topic, NULL)
         if not self._rd_kafka_topic:
-            err_str = "Failed to create topic object."
+            err_str = "Failed to create topic object"
             logger.error(err_str)
-            logger.info("Destroying kafka producer.")
+            logger.info("Destroying kafka producer")
             crdk.rd_kafka_destroy(self._rd_kafka_producer)
             raise exceptions.ProducerError(err_str)
-        logger.info("Created kafka topic.")
+        logger.info("Created kafka topic")
 
     async def _periodic_rd_kafka_poll(self):
         while True:
@@ -90,7 +93,7 @@ cdef class Producer:
                     if self._debug:
                         logger.debug(
                             "Rd kafka production queue is full "
-                            "waiting 0.1 seconds to retry."
+                            "waiting 0.1 seconds to retry"
                         )
                     await asyncio.sleep(0.1)
                 else:
@@ -101,8 +104,7 @@ cdef class Producer:
                 if self._debug: logger.debug("Sent message")
                 return
         else:
-            err_str = "Producer stopped without wait for delivery all " \
-                      "messages"
+            err_str = "Produce called in a stopped producer"
             logger.warning(err_str)
             raise exceptions.ProducerError(err_str)
 
@@ -117,28 +119,28 @@ cdef class Producer:
             )
             self.producer_state = producer_states.STARTED
         else:
-            error_str = "Tried to start a producer already started."
+            error_str = "Tried to start a producer already started"
             logger.error(error_str)
             raise exceptions.ProducerError(error_str)
 
-    def stop(self):
+    def stop(self, timeout=10):
         logger.info("Called producer stop")
         if self.producer_state == producer_states.STARTED:
             self.producer_state = producer_states.STOPPED
-            logger.debug("Waiting to deliver all the remaining messages")
-            err = crdk.rd_kafka_flush(self._rd_kafka_producer, 10 * 1000)
+            logger.info("Waiting to deliver all the remaining messages")
+            err = crdk.rd_kafka_flush(self._rd_kafka_producer, timeout * 1000)
             if err != crdk.RD_KAFKA_RESP_ERR_NO_ERROR:
-                err_str = crdk.rd_kafka_err2str(err)
-                logger.error(err_str)
-                raise exceptions.ProducerError(err_str)
-            logger.debug("Destroying rd kafka structures")
+                err_str = bytes(crdk.rd_kafka_err2str(err)).decode()
+                logger.error(f"Timeout occurred waiting to deliver all the "
+                             f"remaining messages")
+            logger.info("Destroying rd kafka structures")
             crdk.rd_kafka_topic_destroy(self._rd_kafka_topic)
             crdk.rd_kafka_destroy(self._rd_kafka_producer)
-            logger.debug("Canceling asyncio poll task")
+            logger.info("Canceling asyncio poll task")
             self._periodic_poll_task.cancel()
-            logger.info("Producer stopped correctly")
+            logger.info("Producer stopped")
         else:
-            error_str = "Tried to stop a producer that is already stopped."
+            error_str = "Tried to stop a producer that is already stopped"
             logger.error(error_str)
             raise exceptions.ProducerError(error_str)
 

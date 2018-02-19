@@ -21,7 +21,7 @@ cdef class ConsumerThread:
     cpdef _main_poll_rdkafka(self):
         cdef crdk.rd_kafka_message_t *rkmessage
         cdef crdk.rd_kafka_t *kafka_consumer
-        logger.info(f"Opened consumer thread.")
+        logger.info(f"Opened consumer thread")
         try:
             while not self.stop_event.is_set():
                 rkmessage = crdk.rd_kafka_consumer_poll(
@@ -33,10 +33,10 @@ cdef class ConsumerThread:
                         logger.debug(
                             "thread consumer, poll timeout without messages")
             else:
-                logger.info(f"Closing consumer thread.")
+                logger.info(f"Closing consumer thread")
         except Exception:
             logger.error(f"Unexpected exception in consumer thread. "
-                         "Closing thread.", exc_info=True)
+                         "Closing thread", exc_info=True)
 
     cdef inline _cb_consume_message(
             self, crdk.rd_kafka_message_t *rk_message):

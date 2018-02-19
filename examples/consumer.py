@@ -27,6 +27,7 @@ async def print_messages():
 async def message_handler_my_topic(message):
     global messages
     messages += 1
+    list()
 
 
 loop = asyncio.get_event_loop()
