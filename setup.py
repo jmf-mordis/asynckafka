@@ -27,7 +27,8 @@ module_list = [
     Extension(
         extension,
         [extension.replace('.', '/') + '.pyx'],
-        libraries=['rdkafka']
+        libraries=['rdkafka'],
+        compiler_directives={'embedsignature': True}
     )
     for extension in extensions
 ]

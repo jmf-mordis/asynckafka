@@ -12,8 +12,7 @@ logger = logging.getLogger("asynckafka")
 
 
 cdef class Producer:
-
-    def __cinit__(self, brokers: str, topic: str, producer_settings=None,
+    def __init__(self, brokers: str, topic: str, producer_settings=None,
                   debug=False, loop=None):
         self.brokers = brokers.encode()
         self.topic = topic.encode()

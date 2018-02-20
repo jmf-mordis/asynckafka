@@ -13,6 +13,8 @@ pytest-asyncio = "*"
 kafka-python = "*"
 uvloop = "*"
 confluent-kafka = "*"
+sphinx = "*"
+sphinx-autobuild = "*"
 
 
 [dev-packages]

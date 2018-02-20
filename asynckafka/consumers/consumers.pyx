@@ -11,8 +11,7 @@ logger = logging.getLogger('asynckafka')
 
 
 cdef class Consumer:
-
-    def __cinit__(self, brokers, group_id=None, consumer_settings=None,
+    def __init__(self, brokers, group_id=None, consumer_settings=None,
                   topic_settings=None, message_handlers=None, loop=None,
                   spawn_tasks=True, debug=False):
         self._rdk_consumer = RdKafkaConsumer(
@@ -157,8 +156,7 @@ cdef class Consumer:
 
 
 cdef class StreamConsumer:
-
-    def __cinit__(self, brokers, topic, group_id=None, consumer_settings=None,
+    def __init__(self, brokers, topic, group_id=None, consumer_settings=None,
                   topic_settings=None, loop=None, debug=False):
         self._rd_kafka = RdKafkaConsumer(
             brokers=brokers, group_id=group_id, topic_settings=topic_settings,
