@@ -7,34 +7,30 @@ ctypedef enum consumer_states:
     NOT_CONSUMING
 
 
-cdef class Consumer:
+cdef class ConsumerBase:
     cdef:
-        RdKafkaConsumer _rdk_consumer
-        ConsumerThread _consumer_thread
-        consumer_states _consumer_state
+        RdKafkaConsumer rdk_consumer
+        ConsumerThread consumer_thread
+        consumer_states consumer_state
+        char debug
 
-        object message_handlers
+        object poll_rd_kafka_task
         object loop
+
+
+cdef class Consumer(ConsumerBase):
+    cdef:
+        object message_handlers
         object _poll_consumer_thread_task
-        object _poll_rd_kafka_task
         object _spawn_tasks
-        char _debug
 
         _open_asyncio_task(self, long message_memory_address)
 
 
-cdef class StreamConsumer:
+cdef class StreamConsumer(ConsumerBase):
     cdef:
-        RdKafkaConsumer _rd_kafka
-        ConsumerThread _consumer_thread
-        consumer_states _consumer_state
-
-        object _loop
-        object _stop
         object _open_tasks_task
-        object _poll_rd_kafka_task
         object _spawn_tasks
-        char _debug
-        object _topic
+        object topic
 
         _destroy_message(self, long message_memory_address)

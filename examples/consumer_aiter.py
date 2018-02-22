@@ -26,7 +26,7 @@ async def print_messages():
 
 async def consume_messages():
     async for message in consumer:
-        print(bytes(message))
+        print(message.tobytes())
 
 
 loop = asyncio.get_event_loop()

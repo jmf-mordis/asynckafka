@@ -1,5 +1,7 @@
 import logging
 
+import asyncio
+
 from asynckafka.exceptions import KafkaError
 from asynckafka.includes cimport c_rd_kafka as crdk
 from asynckafka import exceptions
@@ -40,8 +42,8 @@ def parse_and_encode_settings(settings: dict) -> dict:
     return _encode_settings(parsed_settings)
 
 
-def parse_rd_kafka_conf_response(conf_respose: int, key: bytes,
-                                  value: bytes):
+def parse_rd_kafka_conf_response(
+        conf_respose: int, key: bytes, value: bytes):
     key_str = key.decode()
     value_str = value.decode()
     if conf_respose == crdk.RD_KAFKA_CONF_OK:
@@ -55,3 +57,11 @@ def parse_rd_kafka_conf_response(conf_respose: int, key: bytes,
         err_str = f"Unknown {value_str} setting with value {value_str}"
         logger.error(err_str)
         raise exceptions.UnknownSetting(err_str)
+
+
+async def periodic_rd_kafka_poll(
+        long rk_addr, loop: asyncio.AbstractEventLoop):
+    rk_ptr = <crdk.rd_kafka_t*> rk_addr
+    while True:
+        await asyncio.sleep(1, loop=loop)
+        crdk.rd_kafka_poll(rk_ptr, 0)

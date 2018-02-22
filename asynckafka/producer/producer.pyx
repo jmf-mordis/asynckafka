@@ -64,11 +64,6 @@ cdef class Producer:
             raise exceptions.ProducerError(err_str)
         logger.info("Created kafka topic")
 
-    async def _periodic_rd_kafka_poll(self):
-        while True:
-            await asyncio.sleep(1, loop=self.loop)
-            crdk.rd_kafka_poll(self._rd_kafka_producer, 0)
-
     async def produce(self, message: bytes, key=None):
         cdef char *message_ptr = message
         cdef char *key_ptr
@@ -113,7 +108,8 @@ cdef class Producer:
             self._init_producer()
             self._init_topic()
             self._periodic_poll_task = asyncio.ensure_future(
-                self._periodic_rd_kafka_poll(),
+                utils.periodic_rd_kafka_poll(<long> self._rd_kafka_producer,
+                                             self.loop),
                 loop=self.loop
             )
             self.producer_state = producer_states.STARTED
