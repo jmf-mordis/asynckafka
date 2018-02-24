@@ -12,9 +12,9 @@ cdef extern from "librdkafka/rdkafka.h":
         RD_KAFKA_CONSUMER
 
     ctypedef enum rd_kafka_conf_res_t:
-        RD_KAFKA_CONF_UNKNOWN = -2  # Unknown configuration name
-        RD_KAFKA_CONF_INVALID = -1  # Invalid configuration value
-        RD_KAFKA_CONF_OK = 0        # Configuration okay
+        RD_KAFKA_CONF_UNKNOWN = -2
+        RD_KAFKA_CONF_INVALID = -1
+        RD_KAFKA_CONF_OK = 0
 
     rd_kafka_conf_t *rd_kafka_conf_new()
 
@@ -172,6 +172,7 @@ cdef extern from "librdkafka/rdkafka.h":
         void  *_private
 
     rd_kafka_t *rd_kafka_new(
+
             rd_kafka_type_t type,
             rd_kafka_conf_t *conf,
             char *errstr,
@@ -293,3 +294,13 @@ cdef extern from "librdkafka/rdkafka.h":
     rd_kafka_resp_err_t rd_kafka_flush (rd_kafka_t *rk, int timeout_ms)
 
     const char *rd_kafka_name(const rd_kafka_t *rk)
+
+    int64_t rd_kafka_message_timestamp (
+            const rd_kafka_message_t *rkmessage,
+			rd_kafka_timestamp_type_t *tstype
+    )
+
+    ctypedef enum rd_kafka_timestamp_type_t:
+        RD_KAFKA_TIMESTAMP_NOT_AVAILABLE,
+        RD_KAFKA_TIMESTAMP_CREATE_TIME,
+        RD_KAFKA_TIMESTAMP_LOG_APPEND_TIME

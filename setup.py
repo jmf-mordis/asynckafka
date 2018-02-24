@@ -10,11 +10,13 @@ with open(os.path.join(os.path.dirname(__file__), 'readme.rst')) as f:
     readme = f.read()
 
 extensions = [
-    "asynckafka.consumers.rd_kafka_consumer",
-    "asynckafka.consumers.consumer_thread",
-    "asynckafka.consumers.consumers",
+    "asynckafka.settings",
     "asynckafka.callbacks",
     "asynckafka.utils",
+    "asynckafka.consumer.message",
+    "asynckafka.consumer.rd_kafka_consumer",
+    "asynckafka.consumer.consumer",
+    "asynckafka.producer.rd_kafka_producer",
     "asynckafka.producer.producer",
 ]
 
@@ -36,14 +38,14 @@ module_list = [
 setup(
     name="asynckafka",
     packages=['asynckafka'],
-    description='Fast python kafka library for asyncio.',
+    description='Fast python kafka client for asyncio.',
     long_description=readme,
     url='http://github.com/jmf-mordis/asynckafka',
     license='mit',
     author='José Melero Fernández',
     author_email='jmelerofernandez@gmail.com',
     platforms=['*nix'],
-    version="0.0.0",
+    version="0.1.0",
     ext_modules=cythonize(
         module_list
     ),

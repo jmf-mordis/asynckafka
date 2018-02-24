@@ -23,6 +23,10 @@ class ProducerError(Exception):
     pass
 
 
+class MessageError(Exception):
+    pass
+
+
 class KafkaError(Exception):
 
     def __init__(self, rk_name, error_code, error_str, reason):

@@ -2,64 +2,35 @@
 Asynckafka
 **********
 
-Fast python kafka library for asyncio.
-Asynckafka is written in cython and essentially use cython as a glue language
-to allow using rdkafka with asyncio.
+Fast python kafka client for asyncio.
+Asynckafka is written in cython on top of rdkafka as kafka driver.
 
-Right now it is work in progress and it's little more than a proof of concept,
-please don't use it in production, or use it at our own risk. I also do not
-guarantee stability in the api in the next months.
+
+Right now it is work in progress, so use it at our own risk. Before the 1.0.0
+release i don't warranty stability in the api between the minor version
+numbers.
 
 Performance
 ###########
 
-The performance is the main porpoise of this library, there is others good
-python library's with good performance, as confluent-kafka, but do not work
-natively asyncio.
+This project was born from the need to have a high performance kafka library
+for asyncio. The others asyncio kafka clients that i tested do not offer a
+good enough performance for some applications.
 
-On the other hand, the asyncio libraries that i tested do not offer a good
-enough performance for some applications.
+Benchmarks
+**********
 
 
 Using Asynckafka
 ################
 
-Consumer with message handlers
-******************************
-It opens a asyncio task per message in each message handler. You can manage
-the number of tasks opened by this consumer with the parameter max_coroutines,
-allowing you to control the back pressure of the service.
 
-Consumer with message handlers example::
+Consumer
+********
 
-    import asyncio
+It works as an asyncronous iterator.
 
-    from asynckafka import Consumer
-
-
-    async def message_handler(message):
-        print(message)
-
-
-    loop = asyncio.get_event_loop()
-
-    consumer = Consumer(brokers='localhost:9092', group_id='my_group_id',
-        loop=loop)
-    consumer.set_message_handler('my_topic', message_handler)
-    consumer.start()
-
-    loop.run_forever()
-
-
-Stream Consumer
-**************************
-Consumer that consume messages from one topic as an asyncronous iterator.
-In contrast with the message handler consumer this consumer don't spawn a
-asyncio task per message. It is going to increase the performance if you
-really don't need the tasks. But if you want the a good performance take in
-account that you should't do any blocking operation inside the async for.
-
-Async iterator consumer example::
+Example::
 
     import asyncio
 
@@ -91,9 +62,9 @@ Async iterator consumer example::
 
 
 Producer
-**************
+********
 
-Basic producer example::
+Producer example::
 
     import asyncio
 
@@ -115,11 +86,9 @@ Basic producer example::
     asyncio.ensure_future(send_message(producer), loop=loop)
     loop.run_forever()
 
-How to use
-##########
 
 Requirements
-****************
+############
 
 #. Python 3.6 or greater
 #. Rdkafka 0.11.X
@@ -140,11 +109,22 @@ Install it with pip::
 Logging
 #######
 
-Asynckafka uses the standard logging library, the logger name is "asynckafka".
+Asynckafka uses the standard python logging library, with "asynckafka" as
+logger.
 
-For enable it to stdout is enough with::
+To enable the logging to stdout it is enough with::
 
     import logging
     import sys
     logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+
+Develop
+#######
+
+How to build the package
+************************
+
+How to run the tests
+********************
+
 

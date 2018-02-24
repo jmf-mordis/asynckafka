@@ -22,9 +22,6 @@ cdef void cb_logger(const crdk.rd_kafka_t *rk, int level, const char *fac,
         logger.info(f"{fac_str}:{buf_str}")
     elif level in {6, 7}:
         logger.debug(f"{fac_str}:{buf_str}")
-    else:
-        logger.critical(f"Unexpected logger level {level}")
-        logger.critical(f"{fac_str}:{buf_str}")
 
 
 cdef void cb_error(crdk.rd_kafka_t *rk, int err, const char *reason,
@@ -40,8 +37,10 @@ cdef void cb_error(crdk.rd_kafka_t *rk, int err, const char *reason,
         if _error_callback:
             _error_callback(kafka_error)
     except Exception:
-        logger.error("Unexpected exception calling error callback",
-                     exc_info=True)
+        logger.error(
+            "Unexpected exception calling error callback",
+            exc_info=True
+        )
 
 
 def set_error_callback(func):
@@ -76,7 +75,6 @@ cdef void cb_rebalance(crdk.rd_kafka_t *rk, crdk.rd_kafka_resp_err_t err,
     else:
         err_str = crdk.rd_kafka_err2str(err)
         logger.error(
-            f"Error in rebalance callback, "
-            f"Revoked partitions {err_str}"
+            f"Error in rebalance callback, Revoked partitions {err_str}"
         )
         crdk.rd_kafka_assign(rk, NULL)

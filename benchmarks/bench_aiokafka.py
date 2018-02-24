@@ -10,7 +10,7 @@ loop = asyncio.get_event_loop()
 
 def print_throughput(time_interval):
     megabytes_per_second = (
-        config.MESSAGE_NUMBER * config.MESSAGE_BYTES)/time_interval/1e6
+        config.MESSAGE_NUMBER * config.MESSAGE_BYTES) / time_interval / 1e6
     print(f"Throughput: {megabytes_per_second} mb/s ")
 
 

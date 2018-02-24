@@ -1,7 +1,7 @@
 import unittest
 
 from asynckafka import exceptions
-from asynckafka.consumers.rd_kafka_consumer cimport RdKafkaConsumer, \
+from asynckafka.consumer.rd_kafka_consumer cimport RdKafkaConsumer, \
     consumer_states
 
 
@@ -71,10 +71,3 @@ class TestsUnitRdKafkaConsumer(unittest.TestCase):
         self.assertEqual(rd_kafka_consumer.status, consumer_states.STARTED)
         rd_kafka_consumer.stop()
         self.assertEqual(rd_kafka_consumer.status, consumer_states.STOPPED)
-
-    def test_cb_logger(self):
-        raise NotImplemented
-
-    def test_cb_rebalance(self):
-        raise NotImplemented
-
