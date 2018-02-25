@@ -3,14 +3,14 @@ Asynckafka
 **********
 
 Fast python kafka client for asyncio.
-Asynckafka is written in `cython <cython.org>` cython on top of
-`rdkafka <https://github.com/edenhill/librdkafka>` as kafka driver.
-
+Asynckafka is written in Cython_ cython on top of Rdkafka_ as kafka driver.
 
 Right now it is work in progress, so use it at our own risk. Before the 1.0.0
 release i don't warranty stability in the api between the minor version
 numbers.
 
+.. _Cython: cython.org
+.. _Rdkafka: https://github.com/edenhill/librdkafka
 
 Documentation url: WIP
 
@@ -18,8 +18,7 @@ Performance
 ###########
 
 This project was born from the need to have a high performance kafka library
-for asyncio. The others asyncio kafka clients that i tested do not offer a
-good enough performance for some applications.
+for asyncio.
 
 Benchmark
 *********
@@ -41,22 +40,7 @@ and 10 millions of messages::
 Using Asynckafka
 ################
 
-Consumer
-********
-
-It works as an asyncronous iterator.
-
-.. literalinclude:: examples/consumer.py
-   :language: python
-
-
-Producer
-********
-
-Producer example.
-
-.. literalinclude:: examples/producer.py
-   :language: python
+You can find one simple producer and consumer example in examples/.
 
 Requirements
 ############
@@ -67,13 +51,14 @@ Requirements
 Install rdkafka from source
 ***************************
 
-You can download rdkafka from `here <https://github
-.com/edenhill/librdkafka/releases>` unpack the package
+You can download rdkafka from here_, then unpack the package
 and run::
 
     ./configure
     make
     sudo make install
+
+.. _here: https://github.com/edenhill/librdkafka/releases
 
 Install rdkafka from package managers
 *************************************
