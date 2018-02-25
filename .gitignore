@@ -104,3 +104,4 @@ ENV/
 *.c
 .pytest_cache
 .DS_store
+MANIFEST

@@ -51,28 +51,14 @@ Requirements
 Install rdkafka from source
 ***************************
 
-You can download rdkafka from here_, then unpack the package
-and run::
+You need the Rdkafka_ headers to be able to compile asynckafka, download
+rdkafka from here_, then unpack the package and run::
 
     ./configure
     make
     sudo make install
 
 .. _here: https://github.com/edenhill/librdkafka/releases
-
-Install rdkafka from package managers
-*************************************
-
-Also there are a lot packages managers (it depends on your operating system)
-with the precompiled binaries, for example:
-
-Ubuntu 17.10::
-
-    sudo apt-get install librdkafka1
-
-MacOS using homebrew::
-
-    brew install librdkafka
 
 Install asynckafka package
 **************************

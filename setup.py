@@ -1,15 +1,14 @@
+import os
+import sys
 from distutils.core import setup
 from distutils.extension import Extension
 
-import os
-
-import sys
 from Cython.Build import cythonize
 
 with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as f:
     readme = f.read()
 
-version = '0.1.0'
+version = '0.1.1'
 module_name = 'asynckafka'
 github_username = 'jmf-mordis'
 
@@ -56,7 +55,7 @@ setup(
         compiler_directives={'embedsignature': True}
     ),
     classifiers=[
-        'Development Status :: 2 - Alpha',
+        'Development Status :: 2 - Pre-Alpha',
         'Programming Language :: Python :: 3 :: Only',
         'Programming Language :: Python :: 3.6',
         'License :: OSI Approved :: MIT License',
