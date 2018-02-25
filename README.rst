@@ -3,7 +3,7 @@ Asynckafka
 **********
 
 Fast python kafka client for asyncio.
-Asynckafka is written in Cython_ cython on top of Rdkafka_ as kafka driver.
+Asynckafka is written in Cython_ on top of Rdkafka_ as kafka driver.
 
 Right now it is work in progress, so use it at our own risk. Before the 1.0.0
 release i don't warranty stability in the api between the minor version
