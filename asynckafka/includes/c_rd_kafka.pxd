@@ -185,7 +185,6 @@ cdef extern from "librdkafka/rdkafka.h":
             rd_kafka_topic_conf_t *conf
     );
 
-    # Returns the topic name.
     const char *rd_kafka_topic_name(const rd_kafka_topic_t *rkt)
 
     int rd_kafka_produce(
@@ -208,21 +207,20 @@ cdef extern from "librdkafka/rdkafka.h":
     )
 
     ctypedef struct rd_kafka_topic_partition_list_t:
-        int cnt  # Current number of elements
-        int size  # Current allocated size
-        rd_kafka_topic_partition_t *elems  # Element array[]
+        int cnt
+        int size
+        rd_kafka_topic_partition_t *elems
 
     ctypedef struct rd_kafka_topic_partition_t:
-        char        *topic  # Topic name
-        int32_t      partition  # Partition
-        int64_t        offset  # Offset
-        void        *metadata  # Metadata
-        size_t       metadata_size  # Metadata size
-        void        *opaque  # Application opaque
-        rd_kafka_resp_err_t err  # Error code, depending on use
+        char        *topic
+        int32_t      partition
+        int64_t        offset
+        void        *metadata
+        size_t       metadata_size
+        void        *opaque
+        rd_kafka_resp_err_t err
         void       *_private
 
-    # Returns a human readable representation of a kafka error.
     const char *rd_kafka_err2str(rd_kafka_resp_err_t err)
 
     const char *rd_kafka_message_errstr(const rd_kafka_message_t *rkmessage)
@@ -238,9 +236,9 @@ cdef extern from "librdkafka/rdkafka.h":
     )
 
     ctypedef enum rd_kafka_conf_res_t:
-        RD_KAFKA_CONF_UNKNOWN = -2  #Unknown configuration name
-        RD_KAFKA_CONF_INVALID = -1  #Invalid configuration value
-        RD_KAFKA_CONF_OK = 0        #Configuration okay
+        RD_KAFKA_CONF_UNKNOWN = -2
+        RD_KAFKA_CONF_INVALID = -1
+        RD_KAFKA_CONF_OK = 0
 
     void rd_kafka_conf_set_rebalance_cb (
             rd_kafka_conf_t *conf,

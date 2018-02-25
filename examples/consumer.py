@@ -1,46 +1,26 @@
 import asyncio
-import uvloop
-
-import sys
-sys.path.append('.')
-
-
-import time
-
-from asynckafka import StreamConsumer, set_debug
-
 import logging
 import sys
+
+from asynckafka import Consumer
+
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
-set_debug(True)
-
-messages = 0
 
 
-async def print_messages():
-    while True:
-        await asyncio.sleep(1)
-        print(messages, time.time())
-
-
-async def consume_messages():
+async def consume_messages(consumer):
     async for message in consumer:
-        print(message.payload)
+        print(f"Received message: {message.payload}")
 
-
-loop = asyncio.get_event_loop()
-consumer = StreamConsumer(
-    brokers="127.0.0.1:9092",
+consumer = Consumer(
+    brokers='localhost:9092',
     topics=['my_topic'],
-    group_id='my_group',
-    loop=loop,
-    debug=False
+    group_id='my_group_id',
 )
 consumer.start()
 
-asyncio.ensure_future(consume_messages(), loop=loop)
-asyncio.ensure_future(print_messages(), loop=loop)
+asyncio.ensure_future(consume_messages(consumer))
 
+loop = asyncio.get_event_loop()
 try:
     loop.run_forever()
 finally:

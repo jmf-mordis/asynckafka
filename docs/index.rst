@@ -12,7 +12,6 @@ Welcome to Asynckafka's documentation!
 
 .. automodule:: asynckafka
 .. autoclass:: asynckafka.Consumer
-.. autoclass:: asynckafka.StreamConsumer
 .. autoclass:: asynckafka.Producer
 
 

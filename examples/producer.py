@@ -1,23 +1,24 @@
 import asyncio
-
 import logging
 import sys
+
+from asynckafka import Producer
+
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
-from asynckafka import Producer, set_debug
 
-set_debug(True)
-
-
-async def send_message(producer):
+async def send_messages(producer):
     while True:
+        await producer.produce("my_topic", b"my_message")
+        print('sent message')
         await asyncio.sleep(1)
-        await producer.produce(topic="my_topic", message=b"Test message !!!!")
+
+producer = Producer(brokers="localhost:9092")
+producer.start()
+
+asyncio.ensure_future(send_messages(producer))
 
 loop = asyncio.get_event_loop()
-producer = Producer(brokers="127.0.0.1:9092")
-producer.start()
-asyncio.ensure_future(send_message(producer), loop=loop)
 
 try:
     loop.run_forever()

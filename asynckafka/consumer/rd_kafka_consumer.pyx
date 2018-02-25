@@ -11,7 +11,7 @@ logger = logging.getLogger('asynckafka')
 
 cdef class RdKafkaConsumer:
 
-    def __cinit__(self, brokers: str, consumer_settings: dict,
+    def __init__(self, brokers: str, consumer_settings: dict,
                   topic_settings: dict, group_id=None):
         self.topics = []
         self.brokers = brokers.encode()
@@ -39,6 +39,7 @@ cdef class RdKafkaConsumer:
         self._init_rd_kafka_consumer()
         self._init_rd_kafka_topic_partition_lists()
         self._init_rd_kafka_subscription()
+        logger.info("RdKafkaConsumer correctly initialized")
         self.status = consumer_states.STARTED
 
     def stop(self):
@@ -81,7 +82,6 @@ cdef class RdKafkaConsumer:
                 sizeof(self.errstr)
             )
             utils.parse_rd_kafka_conf_response(conf_resp, key, value)
-
 
     def _init_rd_kafka_consumer_group(self):
         crdk.rd_kafka_conf_set_rebalance_cb(

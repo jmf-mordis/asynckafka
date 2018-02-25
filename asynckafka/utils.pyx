@@ -2,7 +2,6 @@ import logging
 
 import asyncio
 
-from asynckafka.exceptions import KafkaError
 from asynckafka.includes cimport c_rd_kafka as crdk
 from asynckafka import exceptions
 
@@ -47,7 +46,7 @@ def parse_rd_kafka_conf_response(
     key_str = key.decode()
     value_str = value.decode()
     if conf_respose == crdk.RD_KAFKA_CONF_OK:
-        logger.debug(f"Correctly configured rdkafka {key_str} with value "
+        logger.info(f"Correctly configured rdkafka {key_str} with value "
                      f"{value_str}")
     elif conf_respose == crdk.RD_KAFKA_CONF_INVALID:
         err_str = f"Invalid {key_str} setting with value: {value_str}"

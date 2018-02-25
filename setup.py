@@ -6,7 +6,7 @@ import os
 import sys
 from Cython.Build import cythonize
 
-with open(os.path.join(os.path.dirname(__file__), 'readme.rst')) as f:
+with open(os.path.join(os.path.dirname(__file__), '_README.rst')) as f:
     readme = f.read()
 
 extensions = [
@@ -29,8 +29,7 @@ module_list = [
     Extension(
         extension,
         [extension.replace('.', '/') + '.pyx'],
-        libraries=['rdkafka'],
-        compiler_directives={'embedsignature': True}
+        libraries=['rdkafka']
     )
     for extension in extensions
 ]
@@ -47,7 +46,8 @@ setup(
     platforms=['*nix'],
     version="0.1.0",
     ext_modules=cythonize(
-        module_list
+        module_list,
+        compiler_directives={'embedsignature': True}
     ),
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',

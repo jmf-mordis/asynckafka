@@ -34,7 +34,6 @@ cdef inline Message _copy_data_to_message(
     return message
 
 
-
 cdef inline char _is_error(crdk.rd_kafka_message_t *rk_message):
     if rk_message.err:
         if rk_message.err == crdk.RD_KAFKA_RESP_ERR__PARTITION_EOF:

@@ -3,21 +3,31 @@ import logging
 import asyncio
 
 from asynckafka import exceptions
-from asynckafka.callbacks cimport cb_logger, cb_error
 from asynckafka.includes cimport c_rd_kafka as crdk
 from asynckafka.settings cimport debug
-from asynckafka.settings import PRODUCER_RD_KAFKA_POLL_PERIOD_MILLISECONDS
+from asynckafka.settings import PRODUCER_RD_KAFKA_POLL_PERIOD_SECONDS
 from asynckafka import utils
 
 
 logger = logging.getLogger("asynckafka")
 
 
-
 cdef class Producer:
+    """
+    TODO DOC
+    """
 
     def __init__(self, brokers, producer_settings=None, topic_settings=None,
                  loop=None):
+        """
+
+        Args:
+            brokers (str): Brokers separated with ",", example:
+            "192.168.1.1:9092,192.168.1.2:9092".
+            producer_settings (dict): Producer rdkafka configuration.
+            topic_settings (dict): Topic rdkafka settings.
+            loop (asyncio.AbstractEventLoop): Asyncio event loop.
+        """
         self.rdk_producer = RdKafkaProducer(
             brokers=brokers, producer_settings=producer_settings,
             topic_settings=topic_settings
@@ -28,6 +38,17 @@ cdef class Producer:
         self.producer_state = producer_states.STOPPED
 
     async def produce(self, topic, message, key=None):
+        """
+        Produce one message to a certain topic. The producer should be running.
+        The message will be copied to internal queues and it will
+        be sent in batches before the end of this coroutine, so this
+        function does not guarantee the delivery of the message.
+
+        Args:
+            topic (str):
+            message (bytes):
+            key (bytes):
+        """
         cdef crdk.rd_kafka_topic_t *rdk_topic
         cdef char *message_ptr = message
         cdef char *key_ptr
@@ -53,7 +74,7 @@ cdef class Producer:
                         "waiting 0.1 seconds to retry"
                     )
                     await asyncio.sleep(
-                        PRODUCER_RD_KAFKA_POLL_PERIOD_MILLISECONDS,
+                        PRODUCER_RD_KAFKA_POLL_PERIOD_SECONDS,
                         loop=self.loop
                     )
                 else:
@@ -70,6 +91,17 @@ cdef class Producer:
             raise exceptions.ProducerError(err_str)
 
     def start(self):
+        """
+        Start the producer. It is necessary call this method before start to
+        produce messages.
+        Raises:
+            asynckafka.exceptions.ProducerError: Error in the initialization of
+            the producer client.
+            asynckafka.exceptions.InvalidSetting: Invalid setting in
+            producer_settings or topic_settings.
+            asynckafka.exceptions.UnknownSetting: Unknown setting in
+            producer_settings or topic_settings.
+        """
         if self.producer_state == producer_states.STOPPED:
             self.rdk_producer.start()
             self.periodic_poll_task = asyncio.ensure_future(
@@ -84,6 +116,19 @@ cdef class Producer:
             raise exceptions.ProducerError(error_str)
 
     def stop(self, timeout=10):
+        """
+        Stop the producer. Tt is advisable to call this method before
+        closing the python interpreter. Once the producer is stopped, all
+        calls to produce should raise a ProducerError.
+
+        Raises:
+            asynckafka.exceptions.ProducerError : Error in the shut down of
+            the producer client.
+            asynckafka.exceptions.InvalidSetting: Invalid setting in
+            consumer_settings or topic_settings.
+            asynckafka.exceptions.UnknownSetting: Unknown setting in
+            consumer_settings or topic_settings.
+        """
         logger.info("Called producer stop")
         if self.producer_state == producer_states.STARTED:
             self.producer_state = producer_states.STOPPED

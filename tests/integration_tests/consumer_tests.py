@@ -5,7 +5,7 @@ from multiprocessing import Event
 
 
 from asynckafka import exceptions
-from asynckafka.consumer.consumer import StreamConsumer
+from asynckafka.consumer.consumer import Consumer
 from asynckafka.callbacks import set_error_callback
 from tests.integration_tests.test_utils import IntegrationTestCase, \
     test_consumer_settings, test_topic_settings, produce_to_kafka
@@ -13,11 +13,11 @@ from tests.integration_tests.test_utils import IntegrationTestCase, \
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 
-class TestIntegrationStreamConsumer(IntegrationTestCase):
+class TestIntegrationConsumer(IntegrationTestCase):
 
     def setUp(self):
         super().setUp()
-        self.stream_consumer = StreamConsumer(
+        self.stream_consumer = Consumer(
             brokers=self.brokers,
             topics=[self.test_topic],
             consumer_settings=test_consumer_settings,
@@ -108,7 +108,7 @@ class TestIntegrationStreamConsumer(IntegrationTestCase):
     def test_error_callback(self):
         error_event = Event()
 
-        self.stream_consumer = StreamConsumer(
+        self.stream_consumer = Consumer(
             brokers="127.0.0.1:60000",
             topics=[self.test_topic],
             consumer_settings=test_consumer_settings,

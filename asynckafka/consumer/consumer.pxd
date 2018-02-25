@@ -6,7 +6,7 @@ ctypedef enum consumer_states:
     NOT_CONSUMING
 
 
-cdef class StreamConsumer:
+cdef class Consumer:
     cdef:
         RdKafkaConsumer rdk_consumer
         consumer_states consumer_state

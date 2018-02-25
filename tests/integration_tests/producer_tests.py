@@ -68,10 +68,8 @@ class TestsIntegrationProducer(IntegrationTestCase):
 
     def test_error_callback(self):
         error_event = Event()
-
-        self.producer = Producer(
-            brokers="127.0.0.1:6000", #Wrong port
-        )
+        # Should be a wrong port
+        self.producer = Producer(brokers="127.0.0.1:6000")
 
         def error_callback(kafka_error):
             error_event.set()
