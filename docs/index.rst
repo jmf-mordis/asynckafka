@@ -10,9 +10,9 @@ Welcome to Asynckafka's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-.. automodule:: asynckafka
-.. autoclass:: asynckafka.Consumer
-.. autoclass:: asynckafka.Producer
+   readme
+   api/api
+
 
 
 

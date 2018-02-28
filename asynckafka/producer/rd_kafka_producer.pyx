@@ -118,3 +118,5 @@ cdef class RdKafkaProducer:
         rdk_topic = self._get_rdk_topic(kafka_topic)
         return rdk_topic
 
+    def get_name(self):
+        return bytes(crdk.rd_kafka_name(self.producer)).decode()

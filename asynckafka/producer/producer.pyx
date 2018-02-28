@@ -3,6 +3,8 @@ import logging
 import asyncio
 
 from asynckafka import exceptions
+from asynckafka.callbacks import register_error_callback, \
+    unregister_error_callback
 from asynckafka.includes cimport c_rd_kafka as crdk
 from asynckafka.settings cimport debug
 from asynckafka.settings import PRODUCER_RD_KAFKA_POLL_PERIOD_SECONDS
@@ -18,14 +20,16 @@ cdef class Producer:
     """
 
     def __init__(self, brokers, producer_settings=None, topic_settings=None,
-                 loop=None):
+                 error_callback=None, loop=None):
         """
-
         Args:
             brokers (str): Brokers separated with ",", example:
-            "192.168.1.1:9092,192.168.1.2:9092".
-            producer_settings (dict): Producer rdkafka configuration.
-            topic_settings (dict): Topic rdkafka settings.
+                "192.168.1.1:9092,192.168.1.2:9092".
+            producer_settings (dict): Rdkafka producer settings.
+            topic_settings (dict): Rdkafka topic settings.
+            error_callback (func): Coroutine with one argument
+                (KafkaError). It is scheduled in the loop when there is
+                an error, for example, if the broker is down.
             loop (asyncio.AbstractEventLoop): Asyncio event loop.
         """
         self.rdk_producer = RdKafkaProducer(
@@ -33,9 +37,10 @@ cdef class Producer:
             topic_settings=topic_settings
         )
 
-        self.loop = loop if loop else asyncio.get_event_loop()
         self.periodic_poll_task = None
         self.producer_state = producer_states.STOPPED
+        self.error_callback = error_callback
+        self.loop = loop if loop else asyncio.get_event_loop()
 
     async def produce(self, topic, message, key=None):
         """
@@ -94,13 +99,14 @@ cdef class Producer:
         """
         Start the producer. It is necessary call this method before start to
         produce messages.
+
         Raises:
             asynckafka.exceptions.ProducerError: Error in the initialization of
-            the producer client.
+                the producer client.
             asynckafka.exceptions.InvalidSetting: Invalid setting in
-            producer_settings or topic_settings.
+                producer_settings or topic_settings.
             asynckafka.exceptions.UnknownSetting: Unknown setting in
-            producer_settings or topic_settings.
+                producer_settings or topic_settings.
         """
         if self.producer_state == producer_states.STOPPED:
             self.rdk_producer.start()
@@ -109,6 +115,9 @@ cdef class Producer:
                     <long> self.rdk_producer.producer, self.loop),
                 loop=self.loop
             )
+            if self.error_callback:
+                register_error_callback(
+                    self, self.rdk_producer.get_name())
             self.producer_state = producer_states.STARTED
         else:
             error_str = "Tried to start a producer already started"
@@ -121,21 +130,27 @@ cdef class Producer:
         closing the python interpreter. Once the producer is stopped, all
         calls to produce should raise a ProducerError.
 
+        Args:
+            timeout (float, int): Maximum time available time to flush the
+                messages.
+
         Raises:
             asynckafka.exceptions.ProducerError : Error in the shut down of
-            the producer client.
+                the producer client.
             asynckafka.exceptions.InvalidSetting: Invalid setting in
-            consumer_settings or topic_settings.
+                consumer_settings or topic_settings.
             asynckafka.exceptions.UnknownSetting: Unknown setting in
-            consumer_settings or topic_settings.
+                consumer_settings or topic_settings.
         """
         logger.info("Called producer stop")
         if self.producer_state == producer_states.STARTED:
-            self.producer_state = producer_states.STOPPED
             self.rdk_producer.stop(timeout)
+            if self.error_callback:
+                unregister_error_callback(self.rdk_producer.get_name())
             logger.info("Canceling asyncio poll task")
             self.periodic_poll_task.cancel()
             logger.info("Producer stopped")
+            self.producer_state = producer_states.STOPPED
         else:
             error_str = "Tried to stop a producer that is already stopped"
             logger.error(error_str)

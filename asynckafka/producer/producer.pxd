@@ -13,3 +13,4 @@ cdef class Producer:
         public object loop
         object periodic_poll_task
         producer_states producer_state
+        public object error_callback

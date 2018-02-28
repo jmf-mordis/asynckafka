@@ -133,3 +133,6 @@ cdef class RdKafkaConsumer:
             logger.error(f"Error subscribing to topic: {error_str}")
             raise exceptions.SubscriptionError(error_str)
         logger.debug("Subscribed to topics ")
+
+    def get_name(self):
+        return bytes(crdk.rd_kafka_name(self.consumer)).decode()

@@ -4,7 +4,6 @@ from multiprocessing import Event
 from kafka import KafkaConsumer
 
 from asynckafka import exceptions
-from asynckafka.callbacks import set_error_callback
 from asynckafka.producer.producer import Producer
 from tests.integration_tests.test_utils import IntegrationTestCase
 
@@ -68,13 +67,15 @@ class TestsIntegrationProducer(IntegrationTestCase):
 
     def test_error_callback(self):
         error_event = Event()
-        # Should be a wrong port
-        self.producer = Producer(brokers="127.0.0.1:6000")
 
-        def error_callback(kafka_error):
+        async def error_callback(kafka_error):
             error_event.set()
 
-        set_error_callback(error_callback)
+        # Should be a wrong port
+        self.producer = Producer(
+            brokers="127.0.0.1:6000",
+            error_callback=error_callback
+        )
 
         async def wait_for_event():
             while True:

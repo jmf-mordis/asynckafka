@@ -12,5 +12,6 @@ cdef class Consumer:
         consumer_states consumer_state
 
         object poll_rd_kafka_task
-        object loop
+        public object loop
         list topics
+        public object error_callback

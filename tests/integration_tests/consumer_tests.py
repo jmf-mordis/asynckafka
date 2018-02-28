@@ -6,7 +6,6 @@ from multiprocessing import Event
 
 from asynckafka import exceptions
 from asynckafka.consumer.consumer import Consumer
-from asynckafka.callbacks import set_error_callback
 from tests.integration_tests.test_utils import IntegrationTestCase, \
     test_consumer_settings, test_topic_settings, produce_to_kafka
 
@@ -108,18 +107,17 @@ class TestIntegrationConsumer(IntegrationTestCase):
     def test_error_callback(self):
         error_event = Event()
 
+        async def error_callback(kafka_error):
+            error_event.set()
+
         self.stream_consumer = Consumer(
             brokers="127.0.0.1:60000",
             topics=[self.test_topic],
             consumer_settings=test_consumer_settings,
             topic_settings=test_topic_settings,
+            error_callback=error_callback,
             loop=self.loop,
         )
-
-        def error_callback(kafka_error):
-            error_event.set()
-
-        set_error_callback(error_callback)
 
         async def wait_for_event():
             while True:

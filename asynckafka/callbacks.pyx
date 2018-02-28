@@ -1,5 +1,7 @@
 import logging
 
+import asyncio
+
 from asynckafka.exceptions import KafkaError
 from asynckafka.includes cimport c_rd_kafka as crdk
 
@@ -8,6 +10,7 @@ logger = logging.getLogger('asynckafka')
 
 
 _error_callback = None
+_name_to_callback_error = {}
 
 
 cdef void cb_logger(const crdk.rd_kafka_t *rk, int level, const char *fac,
@@ -32,20 +35,31 @@ cdef void cb_error(crdk.rd_kafka_t *rk, int err, const char *reason,
     reason_str = bytes(reason).decode()
     kafka_error = KafkaError(rk_name=rd_name_str, error_code=err,
                              error_str=error_str, reason=reason)
-    logger.error(f"Error callback! {rd_name_str}, {error_str} {reason_str}")
+    logger.error(f"Error callback. {rd_name_str}, {error_str}, {reason_str}")
+
     try:
-        if _error_callback:
-            _error_callback(kafka_error)
-    except Exception:
-        logger.error(
-            "Unexpected exception calling error callback",
-            exc_info=True
-        )
+        consumer_or_producer = _name_to_callback_error[rd_name_str]
+    except KeyError:
+        logger.error("Error callback of not registered producer or consumer")
+    else:
+        try:
+            asyncio.run_coroutine_threadsafe(
+                consumer_or_producer.error_callback(kafka_error),
+                loop=consumer_or_producer.loop
+            )
+        except Exception:
+            logger.exception("Unexpected exception opening a error"
+                             " callback corutine.")
 
 
-def set_error_callback(func):
-    global _error_callback
-    _error_callback = func
+def register_error_callback(consumer_or_producer, name):
+    logger.info(f"Registering error callback of {name}")
+    _name_to_callback_error[name] = consumer_or_producer
+
+
+def unregister_error_callback(name):
+    logger.info(f"Unregistering error callback of {name}")
+    del _name_to_callback_error[name]
 
 
 cdef inline log_partition_list(

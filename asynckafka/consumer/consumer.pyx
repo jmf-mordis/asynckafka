@@ -2,11 +2,14 @@ import asyncio
 import logging
 
 from asynckafka import exceptions, utils
+from asynckafka.callbacks import register_error_callback, \
+    unregister_error_callback
 from asynckafka.settings import CONSUMER_RD_KAFKA_POLL_PERIOD_SECONDS
 from asynckafka.consumer.message cimport message_factory
 from asynckafka.consumer.rd_kafka_consumer cimport RdKafkaConsumer
 from asynckafka.includes cimport c_rd_kafka as crdk
 from asynckafka.settings cimport debug
+
 
 logger = logging.getLogger('asynckafka')
 
@@ -16,15 +19,19 @@ cdef class Consumer:
     TODO doc
     """
     def __init__(self, brokers, topics, group_id=None, consumer_settings=None,
-                 topic_settings=None, loop=None):
+                 topic_settings=None, error_callback=None, loop=None):
         """
+
         Args:
             brokers (str): Brokers separated with ",", example:
-            "192.168.1.1:9092,192.168.1.2:9092".
+                "192.168.1.1:9092,192.168.1.2:9092".
             topics (list): Topics to consume.
             group_id (str): Consumer group identifier.
-            consumer_settings (dict): Consumer rdkafka configuration.
-            topic_settings (dict): Topic rdkafka settings.
+            consumer_settings (dict): Rdkafka consumer settings.
+            topic_settings (dict): Rdkafka topic settings.
+            error_callback (func): Coroutine with one argument
+                (KafkaError). It is scheduled in the loop when there is
+                an error, for example, if the broker is down.
             loop (asyncio.AbstractEventLoop): Asyncio event loop.
         """
         self.rdk_consumer = RdKafkaConsumer(
@@ -37,10 +44,12 @@ cdef class Consumer:
         self.loop = loop if loop else asyncio.get_event_loop()
         self.consumer_state = consumer_states.NOT_CONSUMING
         self.poll_rd_kafka_task = None
+        self.error_callback = error_callback
 
     def is_consuming(self):
         """
         Method for check the consumer state.
+
         Returns:
             bool: True if the consumer is consuming false if not.
         """
@@ -49,6 +58,7 @@ cdef class Consumer:
     def is_stopped(self):
         """
         Method for check the consumer state.
+
         Returns:
             bool: True if the consumer is stopped false if not.
         """
@@ -58,13 +68,14 @@ cdef class Consumer:
         """
         Start the consumer. It is necessary call this method before start to
         consume messages.
+
         Raises:
             asynckafka.exceptions.ConsumerError: Error in the initialization of
-            the consumer client.
+                the consumer client.
             asynckafka.exceptions.InvalidSetting: Invalid setting in
-            consumer_settings or topic_settings.
+                consumer_settings or topic_settings.
             asynckafka.exceptions.UnknownSetting: Unknown setting in
-            consumer_settings or topic_settings.
+                consumer_settings or topic_settings.
         """
         if self.is_consuming():
             logger.error("Tried to start a consumer that it is already "
@@ -81,6 +92,9 @@ cdef class Consumer:
                 ), loop=self.loop
             )
             self._post_start()
+            if self.error_callback:
+                register_error_callback(
+                    self, self.rdk_consumer.get_name())
             self.consumer_state = consumer_states.CONSUMING
             logger.info('Consumer started')
 
@@ -88,23 +102,23 @@ cdef class Consumer:
         """
         Internal method to be overwritten by other consumers that use this one
         as Base.
-        Returns:
         """
         pass
 
     def stop(self):
         """
-        Stop the consumer. Tt is advisable to call this method before
+        Stop the consumer. It is advisable to call this method before
         closing the python interpreter. It are going to stop the
         asynciterator, asyncio tasks opened by this client and free the
         memory used by the consumer.
+
         Raises:
             asynckafka.exceptions.ConsumerError: Error in the shut down of
-            the consumer client.
+                the consumer client.
             asynckafka.exceptions.InvalidSetting: Invalid setting in
-            consumer_settings or topic_settings.
+                consumer_settings or topic_settings.
             asynckafka.exceptions.UnknownSetting: Unknown setting in
-            consumer_settings or topic_settings.
+                consumer_settings or topic_settings.
         """
         if not self.is_consuming():
             logger.error("Tried to stop a consumer that it is already "
@@ -113,6 +127,8 @@ cdef class Consumer:
         else:
             logger.info("Stopping asynckafka consumer")
             self._pre_stop()
+            if self.error_callback:
+                unregister_error_callback(self.rdk_consumer.get_name())
             logger.info("Closing rd kafka poll task")
             self.poll_rd_kafka_task.cancel()
             self.rdk_consumer.stop()
