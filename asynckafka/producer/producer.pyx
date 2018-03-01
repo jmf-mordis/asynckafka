@@ -19,22 +19,22 @@ cdef class Producer:
     TODO DOC
     """
 
-    def __init__(self, brokers, producer_settings=None, topic_settings=None,
+    def __init__(self, brokers, rdk_producer_config=None, rdk_topic_config=None,
                  error_callback=None, loop=None):
         """
         Args:
             brokers (str): Brokers separated with ",", example:
                 "192.168.1.1:9092,192.168.1.2:9092".
-            producer_settings (dict): Rdkafka producer settings.
-            topic_settings (dict): Rdkafka topic settings.
+            rdk_producer_config (dict): Rdkafka producer settings.
+            rdk_topic_config (dict): Rdkafka topic settings.
             error_callback (func): Coroutine with one argument
                 (KafkaError). It is scheduled in the loop when there is
                 an error, for example, if the broker is down.
             loop (asyncio.AbstractEventLoop): Asyncio event loop.
         """
         self.rdk_producer = RdKafkaProducer(
-            brokers=brokers, producer_settings=producer_settings,
-            topic_settings=topic_settings
+            brokers=brokers, producer_config=rdk_producer_config,
+            topic_config=rdk_topic_config
         )
 
         self.periodic_poll_task = None

@@ -9,8 +9,8 @@ cdef RdKafkaConsumer consumer_factory():
     return RdKafkaConsumer(
         brokers='127.0.0.1',
         group_id='my_test_group_id',
-        consumer_settings={},
-        topic_settings={},
+        consumer_config={},
+        topic_config={},
     )
 
 
@@ -28,11 +28,11 @@ class TestsUnitRdKafkaConsumer(unittest.TestCase):
     def test_init_add_group_to_settings(self):
         rd_kafka_consumer = consumer_factory()
         self.assertDictEqual(
-            rd_kafka_consumer.consumer_settings,
+            rd_kafka_consumer.consumer_config,
             {b'group.id': b'my_test_group_id'},
         )
         self.assertDictEqual(
-            rd_kafka_consumer.topic_settings,
+            rd_kafka_consumer.topic_config,
             {b'offset.store.method': b'broker'}
         )
 
@@ -40,15 +40,15 @@ class TestsUnitRdKafkaConsumer(unittest.TestCase):
         rd_kafka_consumer = RdKafkaConsumer(
             brokers='127.0.0.1',
             group_id=None,
-            consumer_settings={},
-            topic_settings={},
+            consumer_config={},
+            topic_config={},
         )
         self.assertDictEqual(
-            rd_kafka_consumer.consumer_settings,
+            rd_kafka_consumer.consumer_config,
             {b'group.id': b'default_consumer_group'}
         )
         self.assertDictEqual(
-            rd_kafka_consumer.topic_settings,
+            rd_kafka_consumer.topic_config,
             {b'offset.store.method': b'broker'}
         )
 

@@ -15,8 +15,8 @@ def print_throughput(time_interval):
 async def fill_topic_with_messages():
     producer = Producer(
         brokers=config.KAFKA_URL,
-        producer_settings=config.PRODUCER_SETTINGS,
-        topic_settings=config.TOPIC_SETTINGS,
+        rdk_producer_config=config.RDK_PRODUCER_CONFIG,
+        rdk_topic_config=config.RDK_TOPIC_CONFIG,
     )
     producer.start()
 
@@ -40,8 +40,8 @@ async def consume_the_messages_stream_consumer():
     stream_consumer = Consumer(
         brokers=config.KAFKA_URL,
         topics=[config.TOPIC],
-        consumer_settings=config.CONSUMER_SETTINGS,
-        topic_settings=config.TOPIC_SETTINGS
+        rdk_consumer_config=config.RDK_CONSUMER_CONFIG,
+        rdk_topic_config=config.RDK_TOPIC_CONFIG
     )
     stream_consumer.start()
 

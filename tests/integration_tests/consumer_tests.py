@@ -19,8 +19,8 @@ class TestIntegrationConsumer(IntegrationTestCase):
         self.stream_consumer = Consumer(
             brokers=self.brokers,
             topics=[self.test_topic],
-            consumer_settings=test_consumer_settings,
-            topic_settings=test_topic_settings,
+            rdk_consumer_config=test_consumer_settings,
+            rdk_topic_config=test_topic_settings,
             loop=self.loop,
         )
 
@@ -113,8 +113,8 @@ class TestIntegrationConsumer(IntegrationTestCase):
         self.stream_consumer = Consumer(
             brokers="127.0.0.1:60000",
             topics=[self.test_topic],
-            consumer_settings=test_consumer_settings,
-            topic_settings=test_topic_settings,
+            rdk_consumer_config=test_consumer_settings,
+            rdk_topic_config=test_topic_settings,
             error_callback=error_callback,
             loop=self.loop,
         )

@@ -37,6 +37,11 @@ module_list = [
     for extension in extensions
 ]
 
+
+requirements = [
+    'cython'
+]
+
 setup(
     name=module_name,
     packages=[module_name],
@@ -50,6 +55,7 @@ setup(
     version=version,
     download_url=f'https://github.com/{github_username}/{module_name}/archive/'
                  f'{version}.tar.gz',
+    install_requires=requirements,
     ext_modules=cythonize(
         module_list,
         compiler_directives={'embedsignature': True}

@@ -17,8 +17,8 @@ cdef class RdKafkaProducer:
 
         public bytes brokers
         public dict topics
-        public dict producer_settings
-        public dict topic_settings
+        public dict producer_config
+        public dict topic_config
 
         inline KafkaTopic _rd_kafka_topic_factory(self, name)
         inline KafkaTopic add_topic(self, topic_name)

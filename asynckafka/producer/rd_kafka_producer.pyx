@@ -13,18 +13,18 @@ cdef class KafkaTopic:
 
 cdef class RdKafkaProducer:
 
-    def __init__(self, brokers, producer_settings=None, topic_settings=None):
+    def __init__(self, brokers, producer_config=None, topic_config=None):
         self.brokers = brokers.encode()
         self.topics = {}
 
-        producer_settings = producer_settings if producer_settings else {}
-        producer_settings['bootstrap.servers'] = brokers
-        self.producer_settings = utils.parse_and_encode_settings(
-            producer_settings
+        producer_config = producer_config if producer_config else {}
+        producer_config['bootstrap.servers'] = brokers
+        self.producer_config = utils.parse_and_encode_settings(
+            producer_config
         )
-        topic_settings = topic_settings if topic_settings else {}
-        self.topic_settings = utils.parse_and_encode_settings(
-            topic_settings
+        topic_config = topic_config if topic_config else {}
+        self.topic_config = utils.parse_and_encode_settings(
+            topic_config
         )
 
     def _init_configs(self):
@@ -32,7 +32,7 @@ cdef class RdKafkaProducer:
         self.topic_conf = crdk.rd_kafka_topic_conf_new()
         crdk.rd_kafka_conf_set_log_cb(self.conf, cb_logger)
         crdk.rd_kafka_conf_set_error_cb(self.conf, cb_error)
-        for key, value in self.producer_settings.items():
+        for key, value in self.producer_config.items():
             conf_resp = crdk.rd_kafka_conf_set(
                 self.conf,
                 key, value,
@@ -40,7 +40,7 @@ cdef class RdKafkaProducer:
                 sizeof(self.errstr)
             )
             utils.parse_rd_kafka_conf_response(conf_resp, key, value)
-        for key, value in self.topic_settings.items():
+        for key, value in self.topic_config.items():
             conf_resp = crdk.rd_kafka_topic_conf_set(
                 self.topic_conf,
                 key, value,

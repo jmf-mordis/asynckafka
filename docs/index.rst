@@ -11,6 +11,10 @@ Welcome to Asynckafka's documentation!
    :caption: Contents:
 
    readme
+   settings
+   logging
+   error_callback
+   examples
    api/api
 
 

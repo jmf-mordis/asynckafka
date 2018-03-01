@@ -11,21 +11,21 @@ logger = logging.getLogger('asynckafka')
 
 cdef class RdKafkaConsumer:
 
-    def __init__(self, brokers: str, consumer_settings: dict,
-                  topic_settings: dict, group_id=None):
+    def __init__(self, brokers: str, consumer_config: dict,
+                 topic_config: dict, group_id=None):
         self.topics = []
         self.brokers = brokers.encode()
 
-        consumer_settings = consumer_settings if consumer_settings else {}
-        consumer_settings['group.id'] = group_id if group_id else \
+        consumer_config = consumer_config if consumer_config else {}
+        consumer_config['group.id'] = group_id if group_id else \
             "default_consumer_group"
-        self.consumer_settings = utils.parse_and_encode_settings(
-            consumer_settings)
+        self.consumer_config = utils.parse_and_encode_settings(
+            consumer_config)
 
-        topic_settings = topic_settings if topic_settings else {}
-        if 'group.id' in consumer_settings:
-            topic_settings["offset.store.method"] = "broker"
-        self.topic_settings = utils.parse_and_encode_settings(topic_settings)
+        topic_config = topic_config if topic_config else {}
+        if 'group.id' in consumer_config:
+            topic_config["offset.store.method"] = "broker"
+        self.topic_config = utils.parse_and_encode_settings(topic_config)
 
         self.status = consumer_states.NOT_STARTED
 
@@ -66,7 +66,7 @@ cdef class RdKafkaConsumer:
         crdk.rd_kafka_conf_set_log_cb(self.conf, cb_logger)
         crdk.rd_kafka_conf_set_error_cb(self.conf, cb_error)
         self.topic_conf = crdk.rd_kafka_topic_conf_new()
-        for key, value in self.consumer_settings.items():
+        for key, value in self.consumer_config.items():
             conf_resp = crdk.rd_kafka_conf_set(
                 self.conf,
                 key, value,
@@ -74,7 +74,7 @@ cdef class RdKafkaConsumer:
                 sizeof(self.errstr)
             )
             utils.parse_rd_kafka_conf_response(conf_resp, key, value)
-        for key, value in self.topic_settings.items():
+        for key, value in self.topic_config.items():
             conf_resp = crdk.rd_kafka_topic_conf_set(
                 self.topic_conf,
                 key, value,

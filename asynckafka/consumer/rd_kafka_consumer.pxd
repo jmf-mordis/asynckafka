@@ -17,6 +17,6 @@ cdef class RdKafkaConsumer:
 
         bytes brokers
         public list topics
-        public dict consumer_settings
-        public dict topic_settings
+        public dict consumer_config
+        public dict topic_config
         public consumer_states status

@@ -14,19 +14,19 @@ KAFKA_URL = f'{KAFKA_IP}:{KAFKA_PORT}'
 
 TOPIC = 'benchmark_' + str(uuid.uuid4())
 
-PRODUCER_SETTINGS = {
+RDK_PRODUCER_CONFIG = {
     'queue.buffering.max.messages': '1000000',
     'queue.buffering.max.ms': '1000',
     'batch.num.messages': '1000000'
 }
 
-CONSUMER_SETTINGS = {
+RDK_CONSUMER_CONFIG = {
     'queue.buffering.max.messages': '1000000',
     'queue.buffering.max.ms': '1000',
     'batch.num.messages': '1000000'
 }
 
-TOPIC_SETTINGS = {
+RDK_TOPIC_CONFIG = {
     'auto.offset.reset':  'smallest'
 }
 

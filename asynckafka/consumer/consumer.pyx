@@ -18,8 +18,8 @@ cdef class Consumer:
     """
     TODO doc
     """
-    def __init__(self, brokers, topics, group_id=None, consumer_settings=None,
-                 topic_settings=None, error_callback=None, loop=None):
+    def __init__(self, brokers, topics, group_id=None, rdk_consumer_config=None,
+                 rdk_topic_config=None, error_callback=None, loop=None):
         """
 
         Args:
@@ -27,16 +27,16 @@ cdef class Consumer:
                 "192.168.1.1:9092,192.168.1.2:9092".
             topics (list): Topics to consume.
             group_id (str): Consumer group identifier.
-            consumer_settings (dict): Rdkafka consumer settings.
-            topic_settings (dict): Rdkafka topic settings.
+            rdk_consumer_config (dict): Rdkafka consumer settings.
+            rdk_topic_config (dict): Rdkafka topic settings.
             error_callback (func): Coroutine with one argument
                 (KafkaError). It is scheduled in the loop when there is
                 an error, for example, if the broker is down.
             loop (asyncio.AbstractEventLoop): Asyncio event loop.
         """
         self.rdk_consumer = RdKafkaConsumer(
-            brokers=brokers, group_id=group_id, topic_settings=topic_settings,
-            consumer_settings=consumer_settings
+            brokers=brokers, group_id=group_id, topic_config=rdk_topic_config,
+            consumer_config=rdk_consumer_config
         )
         assert isinstance(topics, list), "Topics should be a list"
         self.topics = [topic.encode() for topic in topics]
