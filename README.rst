@@ -37,48 +37,4 @@ and 10 millions of messages::
     Throughput: 96.68396202167787 mb/s
 
 
-Using Asynckafka
-################
-
-You can find one simple producer and consumer example in examples/.
-
-Requirements
-############
-
-#. Python 3.6 or greater
-#. Rdkafka 0.11.X
-
-Install rdkafka from source
-***************************
-
-You need the Rdkafka_ headers to be able to compile asynckafka, download
-rdkafka from here_, then unpack the package and run::
-
-    ./configure
-    make
-    sudo make install
-
-.. _here: https://github.com/edenhill/librdkafka/releases
-
-Install asynckafka package
-**************************
-
-The package is in pypi, you can install it with pip::
-
-    $ pip install asynckafka
-
-
-Develop
-#######
-
-How to build the package
-************************
-
-WIP
-
-How to run the tests
-********************
-
-WIP
-
 

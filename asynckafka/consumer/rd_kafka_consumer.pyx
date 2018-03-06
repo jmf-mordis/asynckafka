@@ -14,7 +14,7 @@ cdef class RdKafkaConsumer:
     def __init__(self, brokers: str, consumer_config: dict,
                  topic_config: dict, group_id=None):
         self.topics = []
-        self.brokers = brokers.encode()
+        self.brokers = brokers.encode() if brokers else b"127.0.0.1:9092"
 
         consumer_config = consumer_config if consumer_config else {}
         consumer_config['group.id'] = group_id if group_id else \
@@ -109,7 +109,7 @@ cdef class RdKafkaConsumer:
         if resp == 0:
             err_str = f"Invalid kafka brokers: {self.brokers}"
             logger.error(err_str)
-            raise exceptions.InvalidBrokers(err_str)
+            raise exceptions.ConsumerError(err_str)
         logger.debug("Added brokers to kafka consumer")
 
     def _init_rd_kafka_topic_partition_lists(self):
@@ -131,7 +131,7 @@ cdef class RdKafkaConsumer:
         if err:
             error_str = crdk.rd_kafka_err2str(err)
             logger.error(f"Error subscribing to topic: {error_str}")
-            raise exceptions.SubscriptionError(error_str)
+            raise exceptions.ConsumerError(error_str)
         logger.debug("Subscribed to topics ")
 
     def get_name(self):

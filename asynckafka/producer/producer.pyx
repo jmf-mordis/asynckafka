@@ -17,21 +17,20 @@ logger = logging.getLogger("asynckafka")
 cdef class Producer:
     """
     TODO DOC
-    """
 
-    def __init__(self, brokers, rdk_producer_config=None, rdk_topic_config=None,
-                 error_callback=None, loop=None):
-        """
-        Args:
-            brokers (str): Brokers separated with ",", example:
-                "192.168.1.1:9092,192.168.1.2:9092".
-            rdk_producer_config (dict): Rdkafka producer settings.
-            rdk_topic_config (dict): Rdkafka topic settings.
-            error_callback (func): Coroutine with one argument
-                (KafkaError). It is scheduled in the loop when there is
-                an error, for example, if the broker is down.
-            loop (asyncio.AbstractEventLoop): Asyncio event loop.
-        """
+    Args:
+        brokers (str): Brokers separated with ",", example:
+            "192.168.1.1:9092,192.168.1.2:9092".
+        rdk_producer_config (dict): Rdkafka producer settings.
+        rdk_topic_config (dict): Rdkafka topic settings.
+        error_callback (Coroutine[asyncio.exceptions.KafkaError]): Coroutine
+            with one argument (KafkaError). It is scheduled in the loop when
+            there is an error, for example, if the broker is down.
+        loop (asyncio.AbstractEventLoop): Asyncio event loop.
+    """
+    def __init__(self, brokers=None, rdk_producer_config=None,
+                 rdk_topic_config=None, error_callback=None, loop=None):
+        brokers = brokers if brokers else "127.0.0.1:9092"
         self.rdk_producer = RdKafkaProducer(
             brokers=brokers, producer_config=rdk_producer_config,
             topic_config=rdk_topic_config

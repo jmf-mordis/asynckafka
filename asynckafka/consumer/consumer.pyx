@@ -16,29 +16,38 @@ logger = logging.getLogger('asynckafka')
 
 cdef class Consumer:
     """
-    TODO doc
-    """
-    def __init__(self, brokers, topics, group_id=None, rdk_consumer_config=None,
-                 rdk_topic_config=None, error_callback=None, loop=None):
-        """
+    TODO DOC
 
-        Args:
-            brokers (str): Brokers separated with ",", example:
-                "192.168.1.1:9092,192.168.1.2:9092".
-            topics (list): Topics to consume.
-            group_id (str): Consumer group identifier.
-            rdk_consumer_config (dict): Rdkafka consumer settings.
-            rdk_topic_config (dict): Rdkafka topic settings.
-            error_callback (func): Coroutine with one argument
-                (KafkaError). It is scheduled in the loop when there is
-                an error, for example, if the broker is down.
-            loop (asyncio.AbstractEventLoop): Asyncio event loop.
-        """
+    Example:
+        Consumer works as a async iterator::
+
+            consumer = Consumer(['my_topic'])
+            consumer.start()
+
+            async for message in consumer:
+                print(message.payload)
+
+    Args:
+        brokers (str): Brokers separated with ",", example:
+            "192.168.1.1:9092,192.168.1.2:9092".
+        topics (list): Topics to consume.
+        group_id (str): Consumer group identifier.
+        rdk_consumer_config (dict): Rdkafka consumer settings.
+        rdk_topic_config (dict): Rdkafka topic settings.
+        error_callback (Coroutine[asyncio.exceptions.KafkaError]): Coroutine
+            with one argument (KafkaError). It is scheduled in the loop when
+            there is an error, for example, if the broker is down.
+        loop (asyncio.AbstractEventLoop): Asyncio event loop.
+    """
+    def __init__(self, topics, brokers=None, group_id=None,
+                 rdk_consumer_config=None, rdk_topic_config=None,
+                 error_callback=None, loop=None):
         self.rdk_consumer = RdKafkaConsumer(
             brokers=brokers, group_id=group_id, topic_config=rdk_topic_config,
             consumer_config=rdk_consumer_config
         )
         assert isinstance(topics, list), "Topics should be a list"
+        assert len(topics) >= 1, "It is necessary at least one topic"
         self.topics = [topic.encode() for topic in topics]
         [self.rdk_consumer.add_topic(topic) for topic in topics]
         self.loop = loop if loop else asyncio.get_event_loop()

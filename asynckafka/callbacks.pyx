@@ -33,8 +33,6 @@ cdef void cb_error(crdk.rd_kafka_t *rk, int err, const char *reason,
     rd_name_str = bytes(crdk.rd_kafka_name(rk)).decode()
     error_str = bytes(crdk.rd_kafka_err2str(err_enum)).decode()
     reason_str = bytes(reason).decode()
-    kafka_error = KafkaError(rk_name=rd_name_str, error_code=err,
-                             error_str=error_str, reason=reason)
     logger.error(f"Error callback. {rd_name_str}, {error_str}, {reason_str}")
 
     try:
@@ -42,6 +40,9 @@ cdef void cb_error(crdk.rd_kafka_t *rk, int err, const char *reason,
     except KeyError:
         logger.error("Error callback of not registered producer or consumer")
     else:
+        kafka_error = KafkaError(rk_name=rd_name_str, error_code=err,
+                                 error_str=error_str, reason=reason,
+                                 consumer_or_producer=consumer_or_producer)
         try:
             asyncio.run_coroutine_threadsafe(
                 consumer_or_producer.error_callback(kafka_error),
@@ -53,11 +54,23 @@ cdef void cb_error(crdk.rd_kafka_t *rk, int err, const char *reason,
 
 
 def register_error_callback(consumer_or_producer, name):
+    """
+    Internal method used by the consumer and producer to register themselves.
+    Args:
+        consumer_or_producer (Union[asynckafka.Producer,
+            asynckafka.Consumer]):
+        name (str):
+    """
     logger.info(f"Registering error callback of {name}")
     _name_to_callback_error[name] = consumer_or_producer
 
 
 def unregister_error_callback(name):
+    """
+    Internal method used by the consumer and producer to unregister themselves.
+    Args:
+        name (str):
+    """
     logger.info(f"Unregistering error callback of {name}")
     del _name_to_callback_error[name]
 

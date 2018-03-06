@@ -13,6 +13,9 @@ def check_rdkafka_version():
     """
     Check that the proper rdkafka version is installed, it throws
     a ImportError then it is not.
+
+    Raises:
+        ImportError: Incorrect rdkafka version installed.
     """
     version_str = crdk.rd_kafka_version_str()
     mayor, minor, revision = str(version_str).split(".")

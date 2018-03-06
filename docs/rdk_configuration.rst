@@ -1,5 +1,5 @@
-Settings
-========
+RdKafka configuration
+=====================
 
 This library is built on top of rdkafka, and as wrapper it uses the same
 configuration that it. The rdkafka configuration is very extensive and can
@@ -10,7 +10,7 @@ https://github.com/edenhill/librdkafka/blob/v0.11.3/CONFIGURATION.md
 .. _configuration: https://github.com/edenhill/librdkafka/blob/v0.11.3/CONFIGURATION.md
 
 The asynckafka producer and consumer accepts two configuration dicts. The
-dicts should have strings in the key and value.
+dicts be strings in the key and value.
 
 Consumer configuration, example::
 
@@ -39,14 +39,13 @@ Producer configuration, example::
         },
     )
 
-The configuration that can be passed to `rdk_consumer_config correspond with
-the` configuration found in the 'Global configuration properties' in the
-rdkafka configuration_ documentation (less the configuration exclusive from
-the producer indicated with a 'P' to the left of the name). The
-rdk_producer_config is exactly the same of the consumer but excluding the
-ones indicated with 'P'.
+The configuration `rdk_consumer_config` correspond with those that can
+be found at 'Global configuration properties', section of
+rdkafka configuration_ documentation (less the exclusive configuration from
+the producer, indicated with a 'P' to the left of the name). The
+rdk_producer_config is the opposite of the consumer, so
+ you should exclude the ones indicated with 'C'.
 
 At the end of configuration_ you can find the 'Topic configuration
 properties', there is located the configuration that can be passed to the
 argument `rdk_topic_config` of the consumer of producer.
-
