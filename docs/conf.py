@@ -194,6 +194,6 @@ class Mock(object):
             return Mock()
 
 
-MOCK_MODULES = ['rdkafka']
+MOCK_MODULES = ['rdkafka', 'asynckafka.includes.c_rd_kafka']
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = Mock()
