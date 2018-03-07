@@ -45,14 +45,19 @@ setup(
     packages=[module_name],
     description='Fast python kafka client for asyncio.',
     long_description=readme,
-    url=f'http://github.com/{github_username}/{module_name}',
+    url='http://github.com/{github_username}/{module_name}'.format(
+        github_username=github_username, module_name=module_name
+    ),
     license='mit',
     author='José Melero Fernández',
     author_email='jmelerofernandez@gmail.com',
     platforms=['*nix'],
     version=version,
-    download_url=f'https://github.com/{github_username}/{module_name}/archive/'
-                 f'{version}.tar.gz',
+    download_url='https://github.com/{github_username}/{module_name}/archive/'
+                 '{version}.tar.gz'.format(
+        github_username=github_username, module_name=module_name,
+        version=version
+    ),
     install_requires=requirements,
     ext_modules=cythonize(
         module_list,

@@ -101,6 +101,9 @@ class KafkaError(Exception):
         return type(self._consumer_or_producer).__name__ == 'Producer'
 
     def __repr__(self):
-        return f"Kafka error in {self._rk_name}. " \
-               f"Error code {self._error_code}. " \
-               f"{self._error_str} {self._reason}"
+        return "Kafka error in {rk_name}. " \
+               "Error code {error_code}. " \
+               "{error_str} {reason}".format(
+                    rk_name=self._rk_name, error_code=self._error_code,
+                    error_str=self._error_str, reason=self._reason
+                )
