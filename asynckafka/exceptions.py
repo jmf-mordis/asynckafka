@@ -89,7 +89,7 @@ class KafkaError(Exception):
         Returns:
             bool: True if it is a consumer else if not
         """
-        return type(self._consumer_or_producer) == 'Consumer'
+        return type(self._consumer_or_producer).__name__ == 'Consumer'
 
     def is_from_producer(self):
         """
@@ -98,7 +98,7 @@ class KafkaError(Exception):
         Returns:
             bool: True if it is a producer else if not
         """
-        return type(self._consumer_or_producer) == 'Producer'
+        return type(self._consumer_or_producer).__name__ == 'Producer'
 
     def __repr__(self):
         return f"Kafka error in {self._rk_name}. " \

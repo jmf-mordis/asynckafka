@@ -27,7 +27,6 @@ if '--tests' in sys.argv:
     extensions.append('tests.asynckafka_tests')
     sys.argv.remove('--tests')
 
-
 module_list = [
     Extension(
         extension,
@@ -36,7 +35,6 @@ module_list = [
     )
     for extension in extensions
 ]
-
 
 requirements = [
     'cython'
