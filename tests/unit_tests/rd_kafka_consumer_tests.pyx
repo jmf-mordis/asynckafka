@@ -1,5 +1,7 @@
 import unittest
 
+import time
+
 from asynckafka import exceptions
 from asynckafka.consumer.rd_kafka_consumer cimport RdKafkaConsumer, \
     consumer_states

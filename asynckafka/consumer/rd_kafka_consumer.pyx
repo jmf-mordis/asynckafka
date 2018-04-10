@@ -5,6 +5,7 @@ from asynckafka.includes cimport c_rd_kafka as crdk
 from asynckafka.callbacks cimport cb_rebalance, cb_error, cb_logger
 from asynckafka import exceptions
 from asynckafka import utils
+from asynckafka.consumer.topic_partition import topic_partition_factory
 
 logger = logging.getLogger('asynckafka')
 
@@ -84,12 +85,8 @@ cdef class RdKafkaConsumer:
             utils.parse_rd_kafka_conf_response(conf_resp, key, value)
 
     def _init_rd_kafka_consumer_group(self):
-        crdk.rd_kafka_conf_set_rebalance_cb(
-            self.conf,
-            cb_rebalance
-        )
-        crdk.rd_kafka_conf_set_default_topic_conf(
-            self.conf, self.topic_conf)
+        crdk.rd_kafka_conf_set_rebalance_cb(self.conf, cb_rebalance)
+        crdk.rd_kafka_conf_set_default_topic_conf(self.conf, self.topic_conf)
 
     def _init_rd_kafka_consumer(self):
         self.consumer = crdk.rd_kafka_new(
@@ -132,7 +129,11 @@ cdef class RdKafkaConsumer:
             error_str = crdk.rd_kafka_err2str(err)
             logger.error(f"Error subscribing to topic: {error_str}")
             raise exceptions.ConsumerError(error_str)
-        logger.debug("Subscribed to topics ")
+        logger.debug("Subscribed to topics")
 
     def get_name(self):
         return bytes(crdk.rd_kafka_name(self.consumer)).decode()
+
+    def assignment(self):
+        return topic_partition_factory(self.consumer)
+

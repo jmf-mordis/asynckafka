@@ -302,3 +302,19 @@ cdef extern from "librdkafka/rdkafka.h":
         RD_KAFKA_TIMESTAMP_NOT_AVAILABLE,
         RD_KAFKA_TIMESTAMP_CREATE_TIME,
         RD_KAFKA_TIMESTAMP_LOG_APPEND_TIME
+
+    rd_kafka_resp_err_t rd_kafka_assignment(
+            rd_kafka_t *rk,
+            rd_kafka_topic_partition_list_t **partitions
+    )
+
+    rd_kafka_resp_err_t rd_kafka_position(
+           rd_kafka_t *rk,
+		   rd_kafka_topic_partition_list_t *partitions
+    )
+
+    rd_kafka_resp_err_t rd_kafka_subscription(
+            rd_kafka_t *rk,
+            rd_kafka_topic_partition_list_t **topics
+    )
+

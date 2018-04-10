@@ -17,6 +17,7 @@ extensions = [
     'asynckafka.callbacks',
     'asynckafka.utils',
     'asynckafka.consumer.message',
+    'asynckafka.consumer.topic_partition',
     'asynckafka.consumer.rd_kafka_consumer',
     'asynckafka.consumer.consumer',
     'asynckafka.producer.rd_kafka_producer',

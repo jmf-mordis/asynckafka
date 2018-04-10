@@ -1,5 +1,5 @@
 from asynckafka.includes cimport c_rd_kafka as crdk
-from libc.stdint cimport int32_t, int64_t
+from libc.stdint cimport int32_t
 
 
 cdef Message message_factory(crdk.rd_kafka_message_t *rk_message)

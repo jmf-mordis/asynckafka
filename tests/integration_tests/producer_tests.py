@@ -1,6 +1,8 @@
 import asyncio
+import unittest
 from multiprocessing import Event
 
+import os
 from kafka import KafkaConsumer
 
 from asynckafka import exceptions
@@ -26,6 +28,7 @@ class TestsIntegrationProducer(IntegrationTestCase):
         self.producer.start()
         self.producer.stop()
 
+    @unittest.skipIf(os.environ.get("SHORT"), "Skipping long tests")
     def test_produce_one_message(self):
         consumer = KafkaConsumer(self.test_topic)
 
@@ -37,6 +40,7 @@ class TestsIntegrationProducer(IntegrationTestCase):
 
         self.assertEqual(msg.value, self.test_message)
 
+    @unittest.skipIf(os.environ.get("SHORT"), "Skipping long tests")
     def test_produce_thousand_of_messages(self):
         consumer = KafkaConsumer(self.test_topic)
         self.producer.start()

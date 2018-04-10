@@ -1,1 +1,4 @@
 cython
+sphinx
+sphinx-autobuild
+sphinxcontrib-versioning

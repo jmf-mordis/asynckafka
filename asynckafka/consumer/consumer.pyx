@@ -42,6 +42,7 @@ cdef class Consumer:
     def __init__(self, topics, brokers=None, group_id=None,
                  rdk_consumer_config=None, rdk_topic_config=None,
                  error_callback=None, loop=None):
+        # TODO add auto_partition_assigment as parameter
         self.rdk_consumer = RdKafkaConsumer(
             brokers=brokers, group_id=group_id, topic_config=rdk_topic_config,
             consumer_config=rdk_consumer_config
@@ -149,6 +150,33 @@ cdef class Consumer:
         Internal method to be overwritten by other consumers that use this one
         as Base.
         Returns:
+        """
+        pass
+
+    def assignment(self):
+        """
+        Partition assignment of the consumer
+        Returns:
+            [asynckafka.consumer.topic_partition.TopicPartition]: List with
+                the current partition assignment of the consumer.
+        """
+        return self.rdk_consumer.assignment()
+
+    async def commit_message(self, message):
+        """
+
+        Args:
+            asynckafka.consumer.message.Message:
+
+        """
+        pass
+
+    async def commit_partition(self, partition):
+        """
+
+        Args:
+            asynckafka.consumer.topic_partition.TopicPartition: topic
+                partition to commit.
         """
         pass
 

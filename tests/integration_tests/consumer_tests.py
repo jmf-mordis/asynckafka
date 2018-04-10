@@ -1,8 +1,10 @@
 import asyncio
 import logging
 import sys
+import unittest
 from multiprocessing import Event
 
+import os
 
 from asynckafka import exceptions
 from asynckafka.consumer.consumer import Consumer
@@ -29,6 +31,7 @@ class TestIntegrationConsumer(IntegrationTestCase):
             self.stream_consumer.stop()
         super().tearDown()
 
+    @unittest.skipIf(os.environ.get("SHORT"), "Skipping long tests")
     def test_consume_one_message(self):
         confirm_message = asyncio.Future(loop=self.loop)
 
@@ -56,6 +59,7 @@ class TestIntegrationConsumer(IntegrationTestCase):
         self.assertTrue(isinstance(consumed_message.key, bytes))
         self.assertTrue(isinstance(consumed_message.offset, int))
 
+    @unittest.skipIf(os.environ.get("SHORT"), "Skipping long tests")
     def test_consume_one_thousand_of_messages(self):
         n_messages = 1000
         consumed_messages = asyncio.Queue(maxsize=n_messages, loop=self.loop)
