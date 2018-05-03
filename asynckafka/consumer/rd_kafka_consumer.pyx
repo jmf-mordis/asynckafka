@@ -5,7 +5,7 @@ from asynckafka.includes cimport c_rd_kafka as crdk
 from asynckafka.callbacks cimport cb_rebalance, cb_error, cb_logger
 from asynckafka import exceptions
 from asynckafka import utils
-from asynckafka.consumer.topic_partition import topic_partition_factory
+from asynckafka.consumer.topic_partition cimport topic_partition_factory
 
 logger = logging.getLogger('asynckafka')
 
@@ -136,4 +136,3 @@ cdef class RdKafkaConsumer:
 
     def assignment(self):
         return topic_partition_factory(self.consumer)
-
