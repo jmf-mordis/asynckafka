@@ -8,7 +8,7 @@ from Cython.Build import cythonize
 with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as f:
     readme = f.read()
 
-version = '0.1.1'
+version = '0.1.2'
 module_name = 'asynckafka'
 github_username = 'jmf-mordis'
 
