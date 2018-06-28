@@ -44,7 +44,7 @@ be found at 'Global configuration properties', section of
 rdkafka configuration_ documentation (less the exclusive configuration from
 the producer, indicated with a 'P' to the left of the name). The
 rdk_producer_config is the opposite of the consumer, so
- you should exclude the ones indicated with 'C'.
+you should exclude the ones indicated with 'C'.
 
 At the end of configuration_ you can find the 'Topic configuration
 properties', there is located the configuration that can be passed to the

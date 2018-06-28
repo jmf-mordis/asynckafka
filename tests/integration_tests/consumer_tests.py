@@ -60,6 +60,28 @@ class TestIntegrationConsumer(IntegrationTestCase):
         self.assertTrue(isinstance(consumed_message.offset, int))
 
     @unittest.skipIf(os.environ.get("SHORT"), "Skipping long tests")
+    def test_consume_one_message_with_key(self):
+        confirm_message = asyncio.Future(loop=self.loop)
+
+        async def consume_messages():
+            async for message in self.stream_consumer:
+                confirm_message.set_result(message)
+
+        self.stream_consumer.start()
+
+        produce_to_kafka(self.test_topic, self.test_message, key=self.test_key)
+
+        asyncio.ensure_future(consume_messages(), loop=self.loop)
+        coro = asyncio.wait_for(confirm_message, timeout=10, loop=self.loop)
+        self.loop.run_until_complete(coro)
+
+        consumed_message = confirm_message.result()
+        self.assertEqual(consumed_message.payload, self.test_message)
+        self.assertEqual(consumed_message.topic, self.test_topic)
+        self.assertEqual(consumed_message.key, self.test_key)
+        self.assertTrue(isinstance(consumed_message.offset, int))
+
+    @unittest.skipIf(os.environ.get("SHORT"), "Skipping long tests")
     def test_consume_one_thousand_of_messages(self):
         n_messages = 1000
         consumed_messages = asyncio.Queue(maxsize=n_messages, loop=self.loop)

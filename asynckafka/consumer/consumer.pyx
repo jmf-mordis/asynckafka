@@ -149,35 +149,30 @@ cdef class Consumer:
         """
         Internal method to be overwritten by other consumers that use this one
         as Base.
-        Returns:
         """
         pass
 
     def assignment(self):
         """
-        Partition assignment of the consumer
+        Partition assignment of the consumer.
+
         Returns:
             [asynckafka.consumer.topic_partition.TopicPartition]: List with
                 the current partition assignment of the consumer.
         """
         return self.rdk_consumer.assignment()
 
-    async def commit_message(self, message):
+    async def commit_partitions(self, partitions):
         """
+        Commit topic partitions.
 
         Args:
-            asynckafka.consumer.message.Message:
-
+            [asynckafka.consumer.topic_partition.TopicPartition]: topic
+                partitions to commit.
         """
         pass
 
-    async def commit_partition(self, partition):
-        """
-
-        Args:
-            asynckafka.consumer.topic_partition.TopicPartition: topic
-                partition to commit.
-        """
+    async def offset_store(self):
         pass
 
     def __aiter__(self):

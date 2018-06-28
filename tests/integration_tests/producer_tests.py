@@ -41,6 +41,20 @@ class TestsIntegrationProducer(IntegrationTestCase):
         self.assertEqual(msg.value, self.test_message)
 
     @unittest.skipIf(os.environ.get("SHORT"), "Skipping long tests")
+    def test_produce_one_message_with_key(self):
+        consumer = KafkaConsumer(self.test_topic)
+
+        self.producer.start()
+        coro = self.producer.produce(self.test_topic, self.test_message,
+                                     self.test_key)
+        self.loop.run_until_complete(coro)
+
+        msg = next(consumer)
+
+        self.assertEqual(msg.value, self.test_message)
+        self.assertEqual(msg.key, self.test_key)
+
+    @unittest.skipIf(os.environ.get("SHORT"), "Skipping long tests")
     def test_produce_thousand_of_messages(self):
         consumer = KafkaConsumer(self.test_topic)
         self.producer.start()

@@ -4,6 +4,7 @@ import sys
 
 from asynckafka import Producer
 
+
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 

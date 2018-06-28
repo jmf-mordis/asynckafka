@@ -6,12 +6,11 @@ cdef Message message_factory(crdk.rd_kafka_message_t *rk_message)
 
 
 cdef class Message:
-    cdef:
-        public char error
+    cdef public char error
+    """1 if the message is a error 0 if not"""
+    cdef public bytes payload
+    cdef public bytes key
 
-        public bytes payload
-        public bytes key
-
-        public str topic
-        public int32_t offset
+    cdef public str topic
+    cdef public int32_t offset
 

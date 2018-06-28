@@ -318,3 +318,14 @@ cdef extern from "librdkafka/rdkafka.h":
             rd_kafka_topic_partition_list_t **topics
     )
 
+    rd_kafka_resp_err_t rd_kafka_commit(
+            rd_kafka_t *rk,
+            const rd_kafka_topic_partition_list_t *offsets,
+            int async
+    )
+
+    rd_kafka_resp_err_t rd_kafka_offset_store(
+            rd_kafka_topic_t *rkt,
+			int32_t partition,
+            int64_t offset
+    )

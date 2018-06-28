@@ -8,7 +8,7 @@ from tests.integration_tests.test_utils import IntegrationTestCase, \
     test_consumer_settings, test_topic_settings, produce_to_kafka
 from asynckafka.includes cimport c_rd_kafka as crdk
 from asynckafka.consumer.topic_partition cimport \
-    topic_partition_factory
+    current_partition_assignment
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
@@ -55,7 +55,7 @@ class TestsUnitDevelop(IntegrationTestCase):
             self.fail("error returning assignment")
         print_partition_list_info(consumer.rdk_consumer.topic_partition_list)
 
-        topic_partition_list = topic_partition_factory(
+        topic_partition_list = current_partition_assignment(
             consumer.rdk_consumer.consumer)
         print(f"""
         TOPIC PARTITION FACTORY: 

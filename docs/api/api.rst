@@ -3,12 +3,7 @@ API
 
 
 .. automodule:: asynckafka
-
-.. automethod:: set_debug
-.. automethod:: is_in_debug
-.. automethod:: set_error_callback
-
-
+    :members: set_debug, is_in_debug
 
 Consumer
 --------
@@ -23,10 +18,8 @@ Producer
 Message
 -------
 
-.. class:: asynckafka.Messsage
-
-    .. attribute:: asynckafka.Messsage.payload
-
+.. autoclass:: asynckafka.Message
+    :members: error, payload, key, topic, offset
 
 
 Kafka Error
