@@ -12,9 +12,9 @@ numbers.
 .. _Cython: cython.org
 .. _Rdkafka: https://github.com/edenhill/librdkafka
 
-Documentation: Rdkafka_
+Documentation_
 
-.. _Rdkafka: https://jmf-mordis.github.io/asynckafka/
+.. _Documentation: https://jmf-mordis.github.io/asynckafka/
 
 Performance
 ###########
