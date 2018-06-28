@@ -1,0 +1,603 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>API &#8212; Asynckafka  documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Develop" href="../develop.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-asynckafka">
+<span id="api"></span><h1>API<a class="headerlink" href="#module-asynckafka" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="asynckafka.set_debug">
+<code class="descclassname">asynckafka.</code><code class="descname">set_debug</code><span class="sig-paren">(</span><em>set_debug: bool</em><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.set_debug" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the debug status in asynckafka. By default some debug logging calls
+in the performance critical path are disabled by default. Activating the
+debug mode has a performance cost even if you do not have the python
+logging enabled, since the calls to the logger are made and the strings
+for it are built.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>set_debug</strong> (<em>bool</em>) – Enable of disable the debug.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="asynckafka.is_in_debug">
+<code class="descclassname">asynckafka.</code><code class="descname">is_in_debug</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.is_in_debug" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if debug False if not.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<div class="section" id="consumer">
+<h2>Consumer<a class="headerlink" href="#consumer" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="asynckafka.Consumer">
+<em class="property">class </em><code class="descclassname">asynckafka.</code><code class="descname">Consumer</code><span class="sig-paren">(</span><em>topics</em>, <em>brokers=None</em>, <em>group_id=None</em>, <em>rdk_consumer_config=None</em>, <em>rdk_topic_config=None</em>, <em>error_callback=None</em>, <em>loop=None</em><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Consumer" title="Permalink to this definition">¶</a></dt>
+<dd><p>TODO DOC</p>
+<p class="rubric">Example</p>
+<p>Consumer works as a async iterator:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">consumer</span> <span class="o">=</span> <span class="n">Consumer</span><span class="p">([</span><span class="s1">&#39;my_topic&#39;</span><span class="p">])</span>
+<span class="n">consumer</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+<span class="k">async</span> <span class="k">for</span> <span class="n">message</span> <span class="ow">in</span> <span class="n">consumer</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">payload</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>brokers</strong> (<em>str</em>) – Brokers separated with “,”, example:
+“192.168.1.1:9092,192.168.1.2:9092”.</li>
+<li><strong>topics</strong> (<em>list</em>) – Topics to consume.</li>
+<li><strong>group_id</strong> (<em>str</em>) – Consumer group identifier.</li>
+<li><strong>rdk_consumer_config</strong> (<em>dict</em>) – Rdkafka consumer settings.</li>
+<li><strong>rdk_topic_config</strong> (<em>dict</em>) – Rdkafka topic settings.</li>
+<li><strong>error_callback</strong> (<em>Coroutine</em><em>[</em><em>asyncio.exceptions.KafkaError</em><em>]</em>) – Coroutine
+with one argument (KafkaError). It is scheduled in the loop when
+there is an error, for example, if the broker is down.</li>
+<li><strong>loop</strong> (<em>asyncio.AbstractEventLoop</em>) – Asyncio event loop.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="asynckafka.Consumer.assignment">
+<code class="descname">assignment</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Consumer.assignment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Partition assignment of the consumer.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><dl class="docutils">
+<dt>List with</dt>
+<dd>the current partition assignment of the consumer.</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">[asynckafka.consumer.topic_partition.TopicPartition]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="asynckafka.Consumer.commit_partitions">
+<code class="descname">commit_partitions</code><span class="sig-paren">(</span><em>self</em>, <em>partitions</em><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Consumer.commit_partitions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Commit topic partitions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>[</strong><strong>asynckafka.consumer.topic_partition.TopicPartition</strong><strong>]</strong> – topic
+partitions to commit.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="asynckafka.Consumer.error_callback">
+<code class="descname">error_callback</code><a class="headerlink" href="#asynckafka.Consumer.error_callback" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>error_callback</em> – object</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="asynckafka.Consumer.is_consuming">
+<code class="descname">is_consuming</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Consumer.is_consuming" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for check the consumer state.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if the consumer is consuming false if not.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="asynckafka.Consumer.is_stopped">
+<code class="descname">is_stopped</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Consumer.is_stopped" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for check the consumer state.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if the consumer is stopped false if not.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="asynckafka.Consumer.loop">
+<code class="descname">loop</code><a class="headerlink" href="#asynckafka.Consumer.loop" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>loop</em> – object</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="asynckafka.Consumer.offset_store">
+<code class="descname">offset_store</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Consumer.offset_store" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="asynckafka.Consumer.start">
+<code class="descname">start</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Consumer.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start the consumer. It is necessary call this method before start to
+consume messages.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
+<li><code class="xref py py-exc docutils literal notranslate"><span class="pre">asynckafka.exceptions.ConsumerError</span></code> – Error in the initialization of
+the consumer client.</li>
+<li><code class="xref py py-exc docutils literal notranslate"><span class="pre">asynckafka.exceptions.InvalidSetting</span></code> – Invalid setting in
+consumer_settings or topic_settings.</li>
+<li><code class="xref py py-exc docutils literal notranslate"><span class="pre">asynckafka.exceptions.UnknownSetting</span></code> – Unknown setting in
+consumer_settings or topic_settings.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="asynckafka.Consumer.stop">
+<code class="descname">stop</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Consumer.stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stop the consumer. It is advisable to call this method before
+closing the python interpreter. It are going to stop the
+asynciterator, asyncio tasks opened by this client and free the
+memory used by the consumer.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
+<li><code class="xref py py-exc docutils literal notranslate"><span class="pre">asynckafka.exceptions.ConsumerError</span></code> – Error in the shut down of
+the consumer client.</li>
+<li><code class="xref py py-exc docutils literal notranslate"><span class="pre">asynckafka.exceptions.InvalidSetting</span></code> – Invalid setting in
+consumer_settings or topic_settings.</li>
+<li><code class="xref py py-exc docutils literal notranslate"><span class="pre">asynckafka.exceptions.UnknownSetting</span></code> – Unknown setting in
+consumer_settings or topic_settings.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="producer">
+<h2>Producer<a class="headerlink" href="#producer" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="asynckafka.Producer">
+<em class="property">class </em><code class="descclassname">asynckafka.</code><code class="descname">Producer</code><span class="sig-paren">(</span><em>brokers=None</em>, <em>rdk_producer_config=None</em>, <em>rdk_topic_config=None</em>, <em>error_callback=None</em>, <em>loop=None</em><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Producer" title="Permalink to this definition">¶</a></dt>
+<dd><p>TODO DOC</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>brokers</strong> (<em>str</em>) – Brokers separated with “,”, example:
+“192.168.1.1:9092,192.168.1.2:9092”.</li>
+<li><strong>rdk_producer_config</strong> (<em>dict</em>) – Rdkafka producer settings.</li>
+<li><strong>rdk_topic_config</strong> (<em>dict</em>) – Rdkafka topic settings.</li>
+<li><strong>error_callback</strong> (<em>Coroutine</em><em>[</em><em>asyncio.exceptions.KafkaError</em><em>]</em>) – Coroutine
+with one argument (KafkaError). It is scheduled in the loop when
+there is an error, for example, if the broker is down.</li>
+<li><strong>loop</strong> (<em>asyncio.AbstractEventLoop</em>) – Asyncio event loop.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="asynckafka.Producer.error_callback">
+<code class="descname">error_callback</code><a class="headerlink" href="#asynckafka.Producer.error_callback" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>error_callback</em> – object</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="asynckafka.Producer.is_started">
+<code class="descname">is_started</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Producer.is_started" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="asynckafka.Producer.loop">
+<code class="descname">loop</code><a class="headerlink" href="#asynckafka.Producer.loop" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>loop</em> – object</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="asynckafka.Producer.produce">
+<code class="descname">produce</code><span class="sig-paren">(</span><em>self</em>, <em>topic</em>, <em>message</em>, <em>key=None</em><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Producer.produce" title="Permalink to this definition">¶</a></dt>
+<dd><p>Produce one message to a certain topic. The producer should be running.
+The message will be copied to internal queues and it will
+be sent in batches before the end of this coroutine, so this
+function does not guarantee the delivery of the message.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>topic</strong> (<em>str</em>) – </li>
+<li><strong>message</strong> (<em>bytes</em>) – </li>
+<li><strong>key</strong> (<em>bytes</em>) – </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="asynckafka.Producer.start">
+<code class="descname">start</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Producer.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start the producer. It is necessary call this method before start to
+produce messages.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
+<li><code class="xref py py-exc docutils literal notranslate"><span class="pre">asynckafka.exceptions.ProducerError</span></code> – Error in the initialization of
+the producer client.</li>
+<li><code class="xref py py-exc docutils literal notranslate"><span class="pre">asynckafka.exceptions.InvalidSetting</span></code> – Invalid setting in
+producer_settings or topic_settings.</li>
+<li><code class="xref py py-exc docutils literal notranslate"><span class="pre">asynckafka.exceptions.UnknownSetting</span></code> – Unknown setting in
+producer_settings or topic_settings.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="asynckafka.Producer.stop">
+<code class="descname">stop</code><span class="sig-paren">(</span><em>self</em>, <em>timeout=10</em><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Producer.stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stop the producer. Tt is advisable to call this method before
+closing the python interpreter. Once the producer is stopped, all
+calls to produce should raise a ProducerError.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>timeout</strong> (<em>float</em><em>, </em><em>int</em>) – Maximum time available time to flush the
+messages.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
+<li><code class="xref py py-exc docutils literal notranslate"><span class="pre">asynckafka.exceptions.ProducerError</span></code> – Error in the shut down of
+the producer client.</li>
+<li><code class="xref py py-exc docutils literal notranslate"><span class="pre">asynckafka.exceptions.InvalidSetting</span></code> – Invalid setting in
+consumer_settings or topic_settings.</li>
+<li><code class="xref py py-exc docutils literal notranslate"><span class="pre">asynckafka.exceptions.UnknownSetting</span></code> – Unknown setting in
+consumer_settings or topic_settings.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="message">
+<h2>Message<a class="headerlink" href="#message" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="asynckafka.Message">
+<em class="property">class </em><code class="descclassname">asynckafka.</code><code class="descname">Message</code><a class="headerlink" href="#asynckafka.Message" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="asynckafka.Message.error">
+<code class="descname">error</code><a class="headerlink" href="#asynckafka.Message.error" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>error</em> – ‘char’
+1 if the message is a error 0 if not</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="asynckafka.Message.key">
+<code class="descname">key</code><a class="headerlink" href="#asynckafka.Message.key" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>key</em> – bytes</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="asynckafka.Message.offset">
+<code class="descname">offset</code><a class="headerlink" href="#asynckafka.Message.offset" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>offset</em> – ‘int32_t’</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="asynckafka.Message.payload">
+<code class="descname">payload</code><a class="headerlink" href="#asynckafka.Message.payload" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>payload</em> – bytes</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="asynckafka.Message.topic">
+<code class="descname">topic</code><a class="headerlink" href="#asynckafka.Message.topic" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>topic</em> – str</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="kafka-error">
+<h2>Kafka Error<a class="headerlink" href="#kafka-error" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="asynckafka.exceptions.KafkaError">
+<em class="property">class </em><code class="descclassname">asynckafka.exceptions.</code><code class="descname">KafkaError</code><span class="sig-paren">(</span><em>rk_name</em>, <em>error_code</em>, <em>error_str</em>, <em>reason</em>, <em>consumer_or_producer</em><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.exceptions.KafkaError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Input of error callback.</p>
+<dl class="attribute">
+<dt id="asynckafka.exceptions.KafkaError.consumer_or_producer">
+<code class="descname">consumer_or_producer</code><a class="headerlink" href="#asynckafka.exceptions.KafkaError.consumer_or_producer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the producer or consumer that trigger the error.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Consumer or
+producer object that triggered the error.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">Union[<a class="reference internal" href="#asynckafka.Consumer" title="asynckafka.Consumer">asynckafka.Consumer</a>, <a class="reference internal" href="#asynckafka.Producer" title="asynckafka.Producer">asynckafka.Producer</a>]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="asynckafka.exceptions.KafkaError.error_code">
+<code class="descname">error_code</code><a class="headerlink" href="#asynckafka.exceptions.KafkaError.error_code" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rdkafka error code.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">RdKafka error code.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="asynckafka.exceptions.KafkaError.error_str">
+<code class="descname">error_str</code><a class="headerlink" href="#asynckafka.exceptions.KafkaError.error_str" title="Permalink to this definition">¶</a></dt>
+<dd><p>Text provided by rdkafka with a human readable description of the
+error.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Text describing the error.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="asynckafka.exceptions.KafkaError.is_from_consumer">
+<code class="descname">is_from_consumer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.exceptions.KafkaError.is_from_consumer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the error is triggered by a consumer.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if it is a consumer else if not</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="asynckafka.exceptions.KafkaError.is_from_producer">
+<code class="descname">is_from_producer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.exceptions.KafkaError.is_from_producer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the error is triggered by a producer.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if it is a producer else if not</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="asynckafka.exceptions.KafkaError.reason">
+<code class="descname">reason</code><a class="headerlink" href="#asynckafka.exceptions.KafkaError.reason" title="Permalink to this definition">¶</a></dt>
+<dd><p>Text provided by rdkafka describing possible causes of the error.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Text describing the reason of the error.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="asynckafka.exceptions.KafkaError.rk_name">
+<code class="descname">rk_name</code><a class="headerlink" href="#asynckafka.exceptions.KafkaError.rk_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rdkafka name of the producer or consumer that trigger
+the error_callback.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">RDK name to identify the consumer or producer.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Asynckafka</a></h1>
+
+
+
+<p class="blurb">Fast kafka client for asyncio</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=jmf-mordis&repo=asynckafka&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../readme.html">Asynckafka</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rdk_configuration.html">RdKafka configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../logging.html">Logging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../error_callback.html">Error callback</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../develop.html">Develop</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#consumer">Consumer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#producer">Producer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#message">Message</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#kafka-error">Kafka Error</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="../develop.html" title="previous chapter">Develop</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, José Melero Fernández.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="../_sources/api/api.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

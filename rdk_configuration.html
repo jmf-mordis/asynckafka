@@ -1,0 +1,158 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>RdKafka configuration &#8212; Asynckafka  documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Logging" href="logging.html" />
+    <link rel="prev" title="Examples" href="examples.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="rdkafka-configuration">
+<h1>RdKafka configuration<a class="headerlink" href="#rdkafka-configuration" title="Permalink to this headline">¶</a></h1>
+<p>This library is built on top of rdkafka, and as wrapper it uses the same
+configuration that it. The rdkafka configuration is very extensive and can
+be found in the following link:</p>
+<p><a class="reference external" href="https://github.com/edenhill/librdkafka/blob/v0.11.3/CONFIGURATION.md">https://github.com/edenhill/librdkafka/blob/v0.11.3/CONFIGURATION.md</a></p>
+<p>The asynckafka producer and consumer accepts two configuration dicts. The
+dicts be strings in the key and value.</p>
+<p>Consumer configuration, example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Consumer</span><span class="p">(</span>
+    <span class="n">brokers</span><span class="o">=</span><span class="s1">&#39;127.0.0.1:9092&#39;</span><span class="p">,</span>
+    <span class="n">topics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;my_topic&#39;</span><span class="p">],</span>
+    <span class="n">rdk_consumer_config</span><span class="o">=</span><span class="p">{</span>
+        <span class="s1">&#39;api.version.request&#39;</span><span class="p">:</span> <span class="s1">&#39;true&#39;</span>
+        <span class="s1">&#39;enable.auto.commit&#39;</span><span class="p">:</span> <span class="s1">&#39;false&#39;</span>
+    <span class="p">},</span>
+    <span class="n">rdk_topic_config</span><span class="o">=</span><span class="p">{</span>
+        <span class="s1">&#39;auto.offset.reset&#39;</span><span class="p">:</span>  <span class="s1">&#39;smallest&#39;</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Producer configuration, example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">producer</span> <span class="o">=</span> <span class="n">Producer</span><span class="p">(</span>
+    <span class="n">brokers</span><span class="o">=</span><span class="s1">&#39;127.0.0.1:9092&#39;</span><span class="p">,</span>
+    <span class="n">rdk_producer_config</span><span class="o">=</span><span class="p">{</span>
+        <span class="s1">&#39;batch.num.messages&#39;</span><span class="p">:</span> <span class="s1">&#39;100000&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;message.send.max.retries&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="n">rdk_topic_config</span><span class="o">=</span><span class="p">{</span>
+        <span class="s1">&#39;message.timeout.ms&#39;</span><span class="p">:</span> <span class="s1">&#39;10000&#39;</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The configuration <cite>rdk_consumer_config</cite> correspond with those that can
+be found at ‘Global configuration properties’, section of
+rdkafka <a class="reference external" href="https://github.com/edenhill/librdkafka/blob/v0.11.3/CONFIGURATION.md">configuration</a> documentation (less the exclusive configuration from
+the producer, indicated with a ‘P’ to the left of the name). The
+rdk_producer_config is the opposite of the consumer, so
+you should exclude the ones indicated with ‘C’.</p>
+<p>At the end of <a class="reference external" href="https://github.com/edenhill/librdkafka/blob/v0.11.3/CONFIGURATION.md">configuration</a> you can find the ‘Topic configuration
+properties’, there is located the configuration that can be passed to the
+argument <cite>rdk_topic_config</cite> of the consumer of producer.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Asynckafka</a></h1>
+
+
+
+<p class="blurb">Fast kafka client for asyncio</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=jmf-mordis&repo=asynckafka&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="readme.html">Asynckafka</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">RdKafka configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="logging.html">Logging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="error_callback.html">Error callback</a></li>
+<li class="toctree-l1"><a class="reference internal" href="develop.html">Develop</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="examples.html" title="previous chapter">Examples</a></li>
+      <li>Next: <a href="logging.html" title="next chapter">Logging</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, José Melero Fernández.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/rdk_configuration.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
