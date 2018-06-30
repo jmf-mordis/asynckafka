@@ -1,15 +1,11 @@
 import asyncio
 
 from asynckafka import Producer, Consumer
+
 import config
+import utils
 
 loop = asyncio.get_event_loop()
-
-
-def print_throughput(time_interval):
-    megabytes_per_second = (
-        config.MESSAGE_NUMBER * config.MESSAGE_BYTES) / time_interval / 1e6
-    print(f"Throughput: {megabytes_per_second} mb/s ")
 
 
 async def fill_topic_with_messages():
@@ -23,17 +19,18 @@ async def fill_topic_with_messages():
     messages_consumed = 0
 
     print(f"Preparing benchmark. Filling topic  {config.TOPIC} with "
-          f"{config.MESSAGE_NUMBER} of {config.MESSAGE_BYTES} bytes.")
+          f"{config.MESSAGE_NUMBER} messages of {config.MESSAGE_BYTES} bytes "
+          f"each one.")
     await asyncio.sleep(0.1)
 
-    with config.Timer() as timer:
+    with utils.Timer() as timer:
         for _ in range(config.MESSAGE_NUMBER):
             messages_consumed += 1
             await producer.produce(config.TOPIC, config.MESSAGE)
         producer.stop()
-    print(f"the producer time to send the messages is {timer.interval} "
+    print(f"The producer time to send the messages is {timer.interval} "
           f"seconds.")
-    print_throughput(timer.interval)
+    utils.print_statistics(timer.interval)
 
 
 async def consume_the_messages_stream_consumer():
@@ -48,14 +45,14 @@ async def consume_the_messages_stream_consumer():
     messages_consumed = 0
 
     print("Starting to consume the messages.")
-    with config.Timer() as timer:
+    with utils.Timer() as timer:
         async for message in stream_consumer:
             messages_consumed += 1
             if messages_consumed == config.MESSAGE_NUMBER:
                 stream_consumer.stop()
     print(f"The time used to consume the messages is {timer.interval} "
           f"seconds.")
-    print_throughput(timer.interval)
+    utils.print_statistics(timer.interval)
 
 
 async def main_coro():

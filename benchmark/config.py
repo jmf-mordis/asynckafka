@@ -2,9 +2,7 @@ import uuid
 
 import os
 
-import time
-
-MESSAGE_BYTES = 200
+MESSAGE_BYTES = 1000
 MESSAGE_NUMBER = 10_000_000
 MESSAGE = os.urandom(MESSAGE_BYTES)
 
@@ -29,18 +27,3 @@ RDK_CONSUMER_CONFIG = {
 RDK_TOPIC_CONFIG = {
     'auto.offset.reset':  'smallest'
 }
-
-
-class Timer:
-
-    @property
-    def elapsed_time(self):
-        return time.time() - self.start
-
-    def __enter__(self):
-        self.start = time.time()
-        return self
-
-    def __exit__(self, *args):
-        self.end = time.time()
-        self.interval = self.end - self.start
