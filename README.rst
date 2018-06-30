@@ -16,27 +16,26 @@ Documentation_
 
 .. _Documentation: https://jmf-mordis.github.io/asynckafka/
 
-Performance
-###########
+
+Benchmark
+#########
 
 This project was born from the need to have a high performance kafka library
 for asyncio.
 
-Benchmark
-*********
+Comparison between Asynckafka and Aiokafka in production and consumption.
 
-Simple benchmark with one kafka broker, one partition, 200 bytes per message
-and 10 millions of messages::
+Production
+**********
 
-    Preparing benchmark.
-    Filling topic  benchmark_ad5682b7-9469-4f35-ad72-933c5e9879e1 with
-    10000000 messages of 200 bytes each one.
-    The time used to produce the messages is 21.905211210250854 seconds.
-    Throughput: 91.30247505050632 mb/s
+.. image:: docs/benchmark/graphs/producer.png
+   :width: 800
 
-    Starting to consume the messages.
-    The time used to consume the messages is 20.685954093933105 seconds.
-    Throughput: 96.68396202167787 mb/s
+Consumption
+***********
 
+.. image:: docs/benchmark/graphs/consumer.png
+   :width: 800
 
-
+The benchmark used for asynckafka is in benchmark directory while the
+benchmark used for aiokafka is in its own repository, also in the benchmark folder.
