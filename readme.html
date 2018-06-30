@@ -38,26 +38,21 @@ Asynckafka is written in <a class="reference external" href="cython.org">Cython<
 <p>Right now it is work in progress, so use it at our own risk. Before the 1.0.0
 release i don’t warranty stability in the api between the minor version
 numbers.</p>
-<p>Documentation url: WIP</p>
-<div class="section" id="performance">
-<h2>Performance<a class="headerlink" href="#performance" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://jmf-mordis.github.io/asynckafka/">Documentation</a></p>
+<div class="section" id="benchmark">
+<h2>Benchmark<a class="headerlink" href="#benchmark" title="Permalink to this headline">¶</a></h2>
 <p>This project was born from the need to have a high performance kafka library
 for asyncio.</p>
-<div class="section" id="benchmark">
-<h3>Benchmark<a class="headerlink" href="#benchmark" title="Permalink to this headline">¶</a></h3>
-<p>Simple benchmark with one kafka broker, one partition, 200 bytes per message
-and 10 millions of messages:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Preparing</span> <span class="n">benchmark</span><span class="o">.</span>
-<span class="n">Filling</span> <span class="n">topic</span>  <span class="n">benchmark_ad5682b7</span><span class="o">-</span><span class="mi">9469</span><span class="o">-</span><span class="mi">4</span><span class="n">f35</span><span class="o">-</span><span class="n">ad72</span><span class="o">-</span><span class="mi">933</span><span class="n">c5e9879e1</span> <span class="k">with</span>
-<span class="mi">10000000</span> <span class="n">messages</span> <span class="n">of</span> <span class="mi">200</span> <span class="nb">bytes</span> <span class="n">each</span> <span class="n">one</span><span class="o">.</span>
-<span class="n">The</span> <span class="n">time</span> <span class="n">used</span> <span class="n">to</span> <span class="n">produce</span> <span class="n">the</span> <span class="n">messages</span> <span class="ow">is</span> <span class="mf">21.905211210250854</span> <span class="n">seconds</span><span class="o">.</span>
-<span class="n">Throughput</span><span class="p">:</span> <span class="mf">91.30247505050632</span> <span class="n">mb</span><span class="o">/</span><span class="n">s</span>
-
-<span class="n">Starting</span> <span class="n">to</span> <span class="n">consume</span> <span class="n">the</span> <span class="n">messages</span><span class="o">.</span>
-<span class="n">The</span> <span class="n">time</span> <span class="n">used</span> <span class="n">to</span> <span class="n">consume</span> <span class="n">the</span> <span class="n">messages</span> <span class="ow">is</span> <span class="mf">20.685954093933105</span> <span class="n">seconds</span><span class="o">.</span>
-<span class="n">Throughput</span><span class="p">:</span> <span class="mf">96.68396202167787</span> <span class="n">mb</span><span class="o">/</span><span class="n">s</span>
-</pre></div>
+<p>Comparison between Asynckafka and Aiokafka in production and consumption.</p>
+<div class="section" id="production">
+<h3>Production<a class="headerlink" href="#production" title="Permalink to this headline">¶</a></h3>
+<a class="reference internal image-reference" href="_images/producer.png"><img alt="_images/producer.png" src="_images/producer.png" style="width: 800px;" /></a>
 </div>
+<div class="section" id="consumption">
+<h3>Consumption<a class="headerlink" href="#consumption" title="Permalink to this headline">¶</a></h3>
+<a class="reference internal image-reference" href="_images/consumer.png"><img alt="_images/consumer.png" src="_images/consumer.png" style="width: 800px;" /></a>
+<p>The benchmark used for asynckafka is in benchmark directory while the
+benchmark used for aiokafka is in its own repository, also in the benchmark folder.</p>
 </div>
 </div>
 </div>
@@ -90,7 +85,7 @@ and 10 millions of messages:</p>
 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Asynckafka</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#performance">Performance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#benchmark">Benchmark</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Requirements</a></li>
