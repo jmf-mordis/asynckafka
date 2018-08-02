@@ -1,5 +1,6 @@
 import logging
 import sys
+import os
 
 import asyncio
 
@@ -10,11 +11,12 @@ from asynckafka.includes cimport c_rd_kafka as crdk
 from asynckafka.consumer.topic_partition cimport \
     current_partition_assignment
 
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+# logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 
 class TestsUnitDevelop(IntegrationTestCase):
 
+    @unittest.skipIf(os.environ.get("DEVELOP") != True, "Skipping long tests")
     def test_assignment(self):
         cdef Consumer consumer = Consumer(
             brokers=self.brokers,

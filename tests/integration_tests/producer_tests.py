@@ -26,6 +26,7 @@ class TestsIntegrationProducer(IntegrationTestCase):
 
     def test_producer_start_stop(self):
         self.producer.start()
+        self.loop.run_until_complete(asyncio.sleep(0))
         self.producer.stop()
 
     @unittest.skipIf(os.environ.get("SHORT"), "Skipping long tests")
@@ -70,11 +71,13 @@ class TestsIntegrationProducer(IntegrationTestCase):
 
     def test_two_starts_raise_producer_error(self):
         self.producer.start()
+        self.loop.run_until_complete(asyncio.sleep(0))
         with self.assertRaises(exceptions.ProducerError):
             self.producer.start()
 
     def test_stops_raise_producer_error(self):
         self.producer.start()
+        self.loop.run_until_complete(asyncio.sleep(0))
         self.producer.stop()
         with self.assertRaises(exceptions.ProducerError):
             self.producer.stop()

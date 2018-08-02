@@ -6,7 +6,7 @@ import uuid
 
 from kafka import KafkaProducer
 
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+# logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 
 def produce_to_kafka(topic, message, key=None, number=1):

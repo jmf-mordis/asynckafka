@@ -11,7 +11,7 @@ from asynckafka.consumer.consumer import Consumer
 from tests.integration_tests.test_utils import IntegrationTestCase, \
     test_consumer_settings, test_topic_settings, produce_to_kafka
 
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+# logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 
 class TestIntegrationConsumer(IntegrationTestCase):
@@ -117,11 +117,14 @@ class TestIntegrationConsumer(IntegrationTestCase):
 
     def test_two_starts_raise_consumer_error(self):
         self.stream_consumer.start()
+        self.loop.run_until_complete(asyncio.sleep(0))
         with self.assertRaises(exceptions.ConsumerError):
             self.stream_consumer.start()
 
+
     def test_stops_raise_consumer_error(self):
         self.stream_consumer.start()
+        self.loop.run_until_complete(asyncio.sleep(0))
         self.stream_consumer.stop()
         with self.assertRaises(exceptions.ConsumerError):
             self.stream_consumer.stop()
