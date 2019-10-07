@@ -2,6 +2,9 @@
 Asynckafka
 **********
 
+.. image:: https://travis-ci.com/jmf-mordis/asynckafka.svg?branch=master
+    :target: https://travis-ci.com/jmf-mordis/asynckafka
+
 Fast python kafka client for asyncio.
 Asynckafka is written in Cython_ on top of Rdkafka_ as kafka driver.
 
