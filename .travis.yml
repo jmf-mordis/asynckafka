@@ -1,0 +1,13 @@
+language: python
+dist: bionic
+services:
+  - docker
+python:
+  - 3.6
+  - 3.7
+  - 3.8-dev
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install -y librdkafka1 librdkafka-dev
+install: pip install -r requirements.txt
+script: make test

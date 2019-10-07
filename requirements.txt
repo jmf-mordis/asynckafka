@@ -1,0 +1,8 @@
+cython
+pytest
+pytest-asyncio
+kafka-python
+confluent-kafka
+uvloop
+sphinx
+sphinx-autobuild
