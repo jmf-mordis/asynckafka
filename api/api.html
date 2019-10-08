@@ -35,7 +35,7 @@
 <span id="api"></span><h1>API<a class="headerlink" href="#module-asynckafka" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="asynckafka.set_debug">
-<code class="sig-prename descclassname">asynckafka.</code><code class="sig-name descname">set_debug</code><span class="sig-paren">(</span><em class="sig-param">set_debug: bool</em><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.set_debug" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">asynckafka.</code><code class="sig-name descname">set_debug</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.set_debug" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the debug status in asynckafka. By default some debug logging calls
 in the performance critical path are disabled by default. Activating the
 debug mode has a performance cost even if you do not have the python
@@ -65,7 +65,7 @@ for it are built.</p>
 <h2>Consumer<a class="headerlink" href="#consumer" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="asynckafka.Consumer">
-<em class="property">class </em><code class="sig-prename descclassname">asynckafka.</code><code class="sig-name descname">Consumer</code><span class="sig-paren">(</span><em class="sig-param">topics</em>, <em class="sig-param">brokers=None</em>, <em class="sig-param">group_id=None</em>, <em class="sig-param">rdk_consumer_config=None</em>, <em class="sig-param">rdk_topic_config=None</em>, <em class="sig-param">error_callback=None</em>, <em class="sig-param">loop=None</em><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Consumer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">asynckafka.</code><code class="sig-name descname">Consumer</code><a class="headerlink" href="#asynckafka.Consumer" title="Permalink to this definition">¶</a></dt>
 <dd><p>TODO DOC</p>
 <p class="rubric">Example</p>
 <p>Consumer works as a async iterator:</p>
@@ -94,7 +94,7 @@ there is an error, for example, if the broker is down.</p></li>
 </dl>
 <dl class="method">
 <dt id="asynckafka.Consumer.assignment">
-<code class="sig-name descname">assignment</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Consumer.assignment" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">assignment</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Consumer.assignment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Partition assignment of the consumer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -112,7 +112,7 @@ there is an error, for example, if the broker is down.</p></li>
 
 <dl class="method">
 <dt id="asynckafka.Consumer.commit_partitions">
-<code class="sig-name descname">commit_partitions</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">partitions</em><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Consumer.commit_partitions" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">commit_partitions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Consumer.commit_partitions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Commit topic partitions.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -122,20 +122,9 @@ partitions to commit.</p>
 </dl>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="asynckafka.Consumer.error_callback">
-<code class="sig-name descname">error_callback</code><a class="headerlink" href="#asynckafka.Consumer.error_callback" title="Permalink to this definition">¶</a></dt>
-<dd><p>object</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>error_callback</p>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="method">
 <dt id="asynckafka.Consumer.is_consuming">
-<code class="sig-name descname">is_consuming</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Consumer.is_consuming" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">is_consuming</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Consumer.is_consuming" title="Permalink to this definition">¶</a></dt>
 <dd><p>Method for check the consumer state.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -149,7 +138,7 @@ partitions to commit.</p>
 
 <dl class="method">
 <dt id="asynckafka.Consumer.is_stopped">
-<code class="sig-name descname">is_stopped</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Consumer.is_stopped" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">is_stopped</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Consumer.is_stopped" title="Permalink to this definition">¶</a></dt>
 <dd><p>Method for check the consumer state.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -161,25 +150,9 @@ partitions to commit.</p>
 </dl>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="asynckafka.Consumer.loop">
-<code class="sig-name descname">loop</code><a class="headerlink" href="#asynckafka.Consumer.loop" title="Permalink to this definition">¶</a></dt>
-<dd><p>object</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>loop</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="asynckafka.Consumer.offset_store">
-<code class="sig-name descname">offset_store</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Consumer.offset_store" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 <dl class="method">
 <dt id="asynckafka.Consumer.start">
-<code class="sig-name descname">start</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Consumer.start" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">start</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Consumer.start" title="Permalink to this definition">¶</a></dt>
 <dd><p>Start the consumer. It is necessary call this method before start to
 consume messages.</p>
 <dl class="field-list simple">
@@ -198,7 +171,7 @@ consume messages.</p>
 
 <dl class="method">
 <dt id="asynckafka.Consumer.stop">
-<code class="sig-name descname">stop</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Consumer.stop" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Consumer.stop" title="Permalink to this definition">¶</a></dt>
 <dd><p>Stop the consumer. It is advisable to call this method before
 closing the python interpreter. It are going to stop the
 asynciterator, asyncio tasks opened by this client and free the
@@ -224,7 +197,7 @@ memory used by the consumer.</p>
 <h2>Producer<a class="headerlink" href="#producer" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="asynckafka.Producer">
-<em class="property">class </em><code class="sig-prename descclassname">asynckafka.</code><code class="sig-name descname">Producer</code><span class="sig-paren">(</span><em class="sig-param">brokers=None</em>, <em class="sig-param">rdk_producer_config=None</em>, <em class="sig-param">rdk_topic_config=None</em>, <em class="sig-param">error_callback=None</em>, <em class="sig-param">loop=None</em><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Producer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">asynckafka.</code><code class="sig-name descname">Producer</code><a class="headerlink" href="#asynckafka.Producer" title="Permalink to this definition">¶</a></dt>
 <dd><p>TODO DOC</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -240,36 +213,9 @@ there is an error, for example, if the broker is down.</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="attribute">
-<dt id="asynckafka.Producer.error_callback">
-<code class="sig-name descname">error_callback</code><a class="headerlink" href="#asynckafka.Producer.error_callback" title="Permalink to this definition">¶</a></dt>
-<dd><p>object</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>error_callback</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="asynckafka.Producer.is_started">
-<code class="sig-name descname">is_started</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Producer.is_started" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="asynckafka.Producer.loop">
-<code class="sig-name descname">loop</code><a class="headerlink" href="#asynckafka.Producer.loop" title="Permalink to this definition">¶</a></dt>
-<dd><p>object</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>loop</p>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="method">
 <dt id="asynckafka.Producer.produce">
-<code class="sig-name descname">produce</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">topic</em>, <em class="sig-param">message</em>, <em class="sig-param">key=None</em><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Producer.produce" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">produce</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Producer.produce" title="Permalink to this definition">¶</a></dt>
 <dd><p>Produce one message to a certain topic. The producer should be running.
 The message will be copied to internal queues and it will
 be sent in batches before the end of this coroutine, so this
@@ -287,7 +233,7 @@ function does not guarantee the delivery of the message.</p>
 
 <dl class="method">
 <dt id="asynckafka.Producer.start">
-<code class="sig-name descname">start</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Producer.start" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">start</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Producer.start" title="Permalink to this definition">¶</a></dt>
 <dd><p>Start the producer. It is necessary call this method before start to
 produce messages.</p>
 <dl class="field-list simple">
@@ -306,7 +252,7 @@ produce messages.</p>
 
 <dl class="method">
 <dt id="asynckafka.Producer.stop">
-<code class="sig-name descname">stop</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">timeout=10</em><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Producer.stop" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asynckafka.Producer.stop" title="Permalink to this definition">¶</a></dt>
 <dd><p>Stop the producer. Tt is advisable to call this method before
 closing the python interpreter. Once the producer is stopped, all
 calls to produce should raise a ProducerError.</p>
@@ -339,57 +285,7 @@ messages.</p>
 <dd><dl class="attribute">
 <dt id="asynckafka.Message.error">
 <code class="sig-name descname">error</code><a class="headerlink" href="#asynckafka.Message.error" title="Permalink to this definition">¶</a></dt>
-<dd><p>‘char’
-1 if the message is a error 0 if not</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>error</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="asynckafka.Message.key">
-<code class="sig-name descname">key</code><a class="headerlink" href="#asynckafka.Message.key" title="Permalink to this definition">¶</a></dt>
-<dd><p>bytes</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>key</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="asynckafka.Message.offset">
-<code class="sig-name descname">offset</code><a class="headerlink" href="#asynckafka.Message.offset" title="Permalink to this definition">¶</a></dt>
-<dd><p>‘int32_t’</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>offset</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="asynckafka.Message.payload">
-<code class="sig-name descname">payload</code><a class="headerlink" href="#asynckafka.Message.payload" title="Permalink to this definition">¶</a></dt>
-<dd><p>bytes</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>payload</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="asynckafka.Message.topic">
-<code class="sig-name descname">topic</code><a class="headerlink" href="#asynckafka.Message.topic" title="Permalink to this definition">¶</a></dt>
-<dd><p>str</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>topic</p>
-</dd>
-</dl>
+<dd><p>1 if the message is a error 0 if not</p>
 </dd></dl>
 
 </dd></dl>
