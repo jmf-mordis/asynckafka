@@ -14,6 +14,7 @@ script:
   - make docs
 deploy:
   - provider: pypi
+    skip_existing: true
     user:
       secure: "xcUjF5/tL9+tC5F2vIc4oNF184rEVRVIfYUxcuRrkS/QVzu23TB16DL12StbX+EOwGH+BvjJ0xKMUV7UyulsiSY8EDRqPYV/T62sbT9r7TTi4YueW/SxoF7Q8BpISojsaRg3YDTshM5I7ukrkFK4OuS6Xvw6N3WZ1jPKwmEgFxCahYuySvXx+2x6GP2q/a3StcM4Tmw+1uFGP+pY96Fk5SRODbrsVI3g0eWdVShk41rbh1MxyHq2GhEsZtD61n5n7Ia5ULlt3o41zx31cVKg2/MPJnv5WFttcp2vtS5ZqeqDy4ubfRPMdDts5VrKzr0atLFgG6HU9sQevBTySOsZdPirgo561kzmjfvhCzSk59iRf8PpwGYN1O3UBW0BcaxhVOI8d0n6Mpw+vcpL2ojbjMFzstwJICt8g45plYuSeqN2w4BMQ46mc9RWqJTcK6EDsRpvPheSuGnmLKIFkaFBbB2xbpoxN5Uf8o2hokukQL/VVurDcuniehaWsWguS77P3FkOBom+sjLJg9y6PFzOutrU86TkG7lubf9E3umVyvhfvkc26QSuWYsEf2PYP2VnkhPFdH2IHEiQBbEP8Z7U7NLZQq+X48y+wrFBJb/E0jxH4ola0gzBJQhlPdQzlSrJDfYCUtrBnbPWXvde5QLe22IwQr/bOPh9R2tzwOc8iTg="
     password:
