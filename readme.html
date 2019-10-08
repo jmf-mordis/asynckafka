@@ -1,18 +1,17 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
     <title>Asynckafka &#8212; Asynckafka  documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Requirements" href="installation.html" />
@@ -29,10 +28,13 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
   <div class="section" id="asynckafka">
 <h1>Asynckafka<a class="headerlink" href="#asynckafka" title="Permalink to this headline">¶</a></h1>
+<a class="reference external image-reference" href="https://travis-ci.com/jmf-mordis/asynckafka"><img alt="https://travis-ci.com/jmf-mordis/asynckafka.svg?branch=master" src="https://travis-ci.com/jmf-mordis/asynckafka.svg?branch=master" /></a>
 <p>Fast python kafka client for asyncio.
 Asynckafka is written in <a class="reference external" href="cython.org">Cython</a> on top of <a class="reference external" href="https://github.com/edenhill/librdkafka">Rdkafka</a> as kafka driver.</p>
 <p>Right now it is work in progress, so use it at our own risk. Before the 1.0.0
@@ -46,11 +48,11 @@ for asyncio.</p>
 <p>Comparison between Asynckafka and Aiokafka in production and consumption.</p>
 <div class="section" id="production">
 <h3>Production<a class="headerlink" href="#production" title="Permalink to this headline">¶</a></h3>
-<a class="reference internal image-reference" href="_images/producer.png"><img alt="_images/producer.png" src="_images/producer.png" style="width: 800px;" /></a>
+<a class="reference internal image-reference" href="https://github.com/jmf-mordis/asynckafka/raw/master/docs/benchmark/graphs/producer.png"><img alt="https://github.com/jmf-mordis/asynckafka/raw/master/docs/benchmark/graphs/producer.png" src="https://github.com/jmf-mordis/asynckafka/raw/master/docs/benchmark/graphs/producer.png" style="width: 800px;" /></a>
 </div>
 <div class="section" id="consumption">
 <h3>Consumption<a class="headerlink" href="#consumption" title="Permalink to this headline">¶</a></h3>
-<a class="reference internal image-reference" href="_images/consumer.png"><img alt="_images/consumer.png" src="_images/consumer.png" style="width: 800px;" /></a>
+<a class="reference internal image-reference" href="https://github.com/jmf-mordis/asynckafka/raw/master/docs/benchmark/graphs/consumer.png"><img alt="https://github.com/jmf-mordis/asynckafka/raw/master/docs/benchmark/graphs/consumer.png" src="https://github.com/jmf-mordis/asynckafka/raw/master/docs/benchmark/graphs/consumer.png" style="width: 800px;" /></a>
 <p>The benchmark used for asynckafka is in benchmark directory while the
 benchmark used for aiokafka is in its own repository, also in the benchmark folder.</p>
 </div>
@@ -59,6 +61,7 @@ benchmark used for aiokafka is in its own repository, also in the benchmark fold
 
 
           </div>
+          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -107,13 +110,11 @@ benchmark used for aiokafka is in its own repository, also in the benchmark fold
 </ul>
 </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -126,8 +127,8 @@ benchmark used for aiokafka is in its own repository, also in the benchmark fold
       &copy;2018, José Melero Fernández.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.1</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
       <a href="_sources/readme.rst.txt"

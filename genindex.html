@@ -1,19 +1,18 @@
 
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
     <title>Index &#8212; Asynckafka  documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" />
    
@@ -28,6 +27,8 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
 
@@ -63,11 +64,13 @@
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/api.html#asynckafka.Consumer">Consumer (class in asynckafka)</a>
+      <li><a href="api/api.html#asynckafka.Consumer.commit_partitions">commit_partitions() (asynckafka.Consumer method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/api.html#asynckafka.exceptions.KafkaError.consumer_or_producer">consumer_or_producer (asynckafka.exceptions.KafkaError attribute)</a>
+      <li><a href="api/api.html#asynckafka.Consumer">Consumer (class in asynckafka)</a>
+</li>
+      <li><a href="api/api.html#asynckafka.exceptions.KafkaError.consumer_or_producer">consumer_or_producer() (asynckafka.exceptions.KafkaError property)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -85,9 +88,9 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/api.html#asynckafka.exceptions.KafkaError.error_code">error_code (asynckafka.exceptions.KafkaError attribute)</a>
+      <li><a href="api/api.html#asynckafka.exceptions.KafkaError.error_code">error_code() (asynckafka.exceptions.KafkaError property)</a>
 </li>
-      <li><a href="api/api.html#asynckafka.exceptions.KafkaError.error_str">error_str (asynckafka.exceptions.KafkaError attribute)</a>
+      <li><a href="api/api.html#asynckafka.exceptions.KafkaError.error_str">error_str() (asynckafka.exceptions.KafkaError property)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -150,6 +153,10 @@
       <li><a href="api/api.html#asynckafka.Message.offset">offset (asynckafka.Message attribute)</a>
 </li>
   </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/api.html#asynckafka.Consumer.offset_store">offset_store() (asynckafka.Consumer method)</a>
+</li>
+  </ul></td>
 </tr></table>
 
 <h2 id="P">P</h2>
@@ -169,11 +176,11 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/api.html#asynckafka.exceptions.KafkaError.reason">reason (asynckafka.exceptions.KafkaError attribute)</a>
+      <li><a href="api/api.html#asynckafka.exceptions.KafkaError.reason">reason() (asynckafka.exceptions.KafkaError property)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/api.html#asynckafka.exceptions.KafkaError.rk_name">rk_name (asynckafka.exceptions.KafkaError attribute)</a>
+      <li><a href="api/api.html#asynckafka.exceptions.KafkaError.rk_name">rk_name() (asynckafka.exceptions.KafkaError property)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -211,6 +218,7 @@
 
 
           </div>
+          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -254,13 +262,11 @@
 </ul>
 </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -273,8 +279,8 @@
       &copy;2018, José Melero Fernández.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.1</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>
 
