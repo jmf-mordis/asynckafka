@@ -35,26 +35,64 @@
   <div class="section" id="asynckafka">
 <h1>Asynckafka<a class="headerlink" href="#asynckafka" title="Permalink to this headline">¶</a></h1>
 <a class="reference external image-reference" href="https://travis-ci.com/jmf-mordis/asynckafka"><img alt="https://travis-ci.com/jmf-mordis/asynckafka.svg?branch=master" src="https://travis-ci.com/jmf-mordis/asynckafka.svg?branch=master" /></a>
-<p>Fast python kafka client for asyncio.
-Asynckafka is written in <a class="reference external" href="cython.org">Cython</a> on top of <a class="reference external" href="https://github.com/edenhill/librdkafka">Rdkafka</a> as kafka driver.</p>
-<p>Right now it is work in progress, so use it at our own risk. Before the 1.0.0
-release i don’t warranty stability in the api between the minor version
-numbers.</p>
-<p><a class="reference external" href="https://jmf-mordis.github.io/asynckafka/">Documentation</a></p>
+<p>Fast python Kafka client for asyncio.
+Asynckafka is written in <a class="reference external" href="cython.org">Cython</a> on top of <a class="reference external" href="https://github.com/edenhill/librdkafka">Rdkafka</a> as Kafka driver.</p>
+<p>The documentation can be found <a class="reference external" href="https://jmf-mordis.github.io/asynckafka/">here</a>.</p>
+<div class="section" id="features">
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Consumer using a balanced group</p></li>
+<li><p>Producer</p></li>
+</ul>
+<p>The library was born as a project to learn Cython, right now it only has the basic
+features implemented, some of the most important missing features are:</p>
+<ul class="simple">
+<li><p>Offset management in the consumer</p></li>
+<li><p>Precise partition management</p></li>
+</ul>
+</div>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="simple-consumer">
+<h3>Simple consumer<a class="headerlink" href="#simple-consumer" title="Permalink to this headline">¶</a></h3>
+<p>How to use a consumer:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">consumer</span> <span class="o">=</span> <span class="n">Consumer</span><span class="p">(</span>
+    <span class="n">brokers</span><span class="o">=</span><span class="s1">&#39;localhost:9092&#39;</span><span class="p">,</span>
+    <span class="n">topics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;my_topic&#39;</span><span class="p">],</span>
+    <span class="n">group_id</span><span class="o">=</span><span class="s1">&#39;my_group_id&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">consumer</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+<span class="k">async</span> <span class="k">for</span> <span class="n">message</span> <span class="ow">in</span> <span class="n">consumer</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Received message: </span><span class="si">{message.payload}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="simple-producer">
+<h3>Simple producer<a class="headerlink" href="#simple-producer" title="Permalink to this headline">¶</a></h3>
+<p>How to use a producer:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">producer</span> <span class="o">=</span> <span class="n">Producer</span><span class="p">(</span><span class="n">brokers</span><span class="o">=</span><span class="s2">&quot;localhost:9092&quot;</span><span class="p">)</span>
+<span class="n">producer</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+<span class="k">await</span> <span class="n">producer</span><span class="o">.</span><span class="n">produce</span><span class="p">(</span><span class="s2">&quot;my_topic&quot;</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;my_message&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <div class="section" id="benchmark">
-<h2>Benchmark<a class="headerlink" href="#benchmark" title="Permalink to this headline">¶</a></h2>
-<p>This project was born from the need to have a high performance kafka library
-for asyncio.</p>
-<p>Comparison between Asynckafka and Aiokafka in production and consumption.</p>
+<h4>Benchmark<a class="headerlink" href="#benchmark" title="Permalink to this headline">¶</a></h4>
+<p>The test was performed in June of 2018 using a single Kafka broker without replication.
+The purpose of the benchmark was only to have an idea of the order of magnitude of the
+library’s performance under these conditions.</p>
+<p>Comparison between asynckafka and aiokafka in production and consumption:</p>
 <div class="section" id="production">
-<h3>Production<a class="headerlink" href="#production" title="Permalink to this headline">¶</a></h3>
+<h5>Production<a class="headerlink" href="#production" title="Permalink to this headline">¶</a></h5>
 <a class="reference internal image-reference" href="https://github.com/jmf-mordis/asynckafka/raw/master/docs/benchmark/graphs/producer.png"><img alt="https://github.com/jmf-mordis/asynckafka/raw/master/docs/benchmark/graphs/producer.png" src="https://github.com/jmf-mordis/asynckafka/raw/master/docs/benchmark/graphs/producer.png" style="width: 800px;" /></a>
 </div>
 <div class="section" id="consumption">
-<h3>Consumption<a class="headerlink" href="#consumption" title="Permalink to this headline">¶</a></h3>
+<h5>Consumption<a class="headerlink" href="#consumption" title="Permalink to this headline">¶</a></h5>
 <a class="reference internal image-reference" href="https://github.com/jmf-mordis/asynckafka/raw/master/docs/benchmark/graphs/consumer.png"><img alt="https://github.com/jmf-mordis/asynckafka/raw/master/docs/benchmark/graphs/consumer.png" src="https://github.com/jmf-mordis/asynckafka/raw/master/docs/benchmark/graphs/consumer.png" style="width: 800px;" /></a>
 <p>The benchmark used for asynckafka is in benchmark directory while the
 benchmark used for aiokafka is in its own repository, also in the benchmark folder.</p>
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -88,7 +126,8 @@ benchmark used for aiokafka is in its own repository, also in the benchmark fold
 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Asynckafka</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#benchmark">Benchmark</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#features">Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Requirements</a></li>
@@ -96,7 +135,6 @@ benchmark used for aiokafka is in its own repository, also in the benchmark fold
 <li class="toctree-l1"><a class="reference internal" href="rdk_configuration.html">RdKafka configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="logging.html">Logging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="error_callback.html">Error callback</a></li>
-<li class="toctree-l1"><a class="reference internal" href="develop.html">Develop</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/api.html">API</a></li>
 </ul>
 

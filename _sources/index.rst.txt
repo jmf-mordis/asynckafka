@@ -16,7 +16,6 @@ Welcome to Asynckafka's documentation!
    rdk_configuration
    logging
    error_callback
-   develop
    api/api
 
 

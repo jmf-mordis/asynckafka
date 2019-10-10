@@ -38,8 +38,8 @@
 configuration that it. The rdkafka configuration is very extensive and can
 be found in the following link:</p>
 <p><a class="reference external" href="https://github.com/edenhill/librdkafka/blob/v0.11.3/CONFIGURATION.md">https://github.com/edenhill/librdkafka/blob/v0.11.3/CONFIGURATION.md</a></p>
-<p>The asynckafka producer and consumer accepts two configuration dicts. The
-dicts be strings in the key and value.</p>
+<p>The asynckafka producer and consumer accepts configuration dicts, one for the producer
+or consumer and another for the topic.</p>
 <p>Consumer configuration, example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Consumer</span><span class="p">(</span>
     <span class="n">brokers</span><span class="o">=</span><span class="s1">&#39;127.0.0.1:9092&#39;</span><span class="p">,</span>
@@ -67,15 +67,8 @@ dicts be strings in the key and value.</p>
 <span class="p">)</span>
 </pre></div>
 </div>
-<p>The configuration <cite>rdk_consumer_config</cite> correspond with those that can
-be found at ‘Global configuration properties’, section of
-rdkafka <a class="reference external" href="https://github.com/edenhill/librdkafka/blob/v0.11.3/CONFIGURATION.md">configuration</a> documentation (less the exclusive configuration from
-the producer, indicated with a ‘P’ to the left of the name). The
-rdk_producer_config is the opposite of the consumer, so
-you should exclude the ones indicated with ‘C’.</p>
-<p>At the end of <a class="reference external" href="https://github.com/edenhill/librdkafka/blob/v0.11.3/CONFIGURATION.md">configuration</a> you can find the ‘Topic configuration
-properties’, there is located the configuration that can be passed to the
-argument <cite>rdk_topic_config</cite> of the consumer of producer.</p>
+<p>If you are looking to use this library, you should carefully read the configuration of
+rdkafka in its different sections, because in the end this library is a wrapper of rdkafka.</p>
 </div>
 
 
@@ -112,7 +105,6 @@ argument <cite>rdk_topic_config</cite> of the consumer of producer.</p>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">RdKafka configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="logging.html">Logging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="error_callback.html">Error callback</a></li>
-<li class="toctree-l1"><a class="reference internal" href="develop.html">Develop</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/api.html">API</a></li>
 </ul>
 

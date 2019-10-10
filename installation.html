@@ -35,8 +35,9 @@
   <div class="section" id="requirements">
 <h1>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h1>
 <ol class="arabic simple">
-<li><p>Python 3.6 or greater</p></li>
-<li><p>Rdkafka 0.11.X</p></li>
+<li><p>Python 3.6 or 3.7</p></li>
+<li><p>GCC</p></li>
+<li><p>Rdkafka &gt;= 0.11</p></li>
 </ol>
 <div class="section" id="install-rdkafka-from-source">
 <h2>Install rdkafka from source<a class="headerlink" href="#install-rdkafka-from-source" title="Permalink to this headline">¶</a></h2>
@@ -47,10 +48,19 @@ rdkafka from <a class="reference external" href="https://github.com/edenhill/lib
 <span class="n">sudo</span> <span class="n">make</span> <span class="n">install</span>
 </pre></div>
 </div>
+<p>Some package managers have a package with the rdkafka headers. For example in Ubuntu 18.04:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="n">librdkafka</span><span class="o">-</span><span class="n">dev</span>
+</pre></div>
+</div>
+<p>For the MacOS users with Homebrew, the rdkafka headers already comes with the librdkafka package:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">brew</span> <span class="n">install</span> <span class="n">librdkafka</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="install-asynckafka-package">
 <h2>Install asynckafka package<a class="headerlink" href="#install-asynckafka-package" title="Permalink to this headline">¶</a></h2>
-<p>The package is in pypi, you can install it with pip:</p>
+<p>You also are going to need gcc to be able to compile the</p>
+<p>The package is in Pypi, you can install it with pip:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ pip install asynckafka
 </pre></div>
 </div>
@@ -95,7 +105,6 @@ rdkafka from <a class="reference external" href="https://github.com/edenhill/lib
 <li class="toctree-l1"><a class="reference internal" href="rdk_configuration.html">RdKafka configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="logging.html">Logging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="error_callback.html">Error callback</a></li>
-<li class="toctree-l1"><a class="reference internal" href="develop.html">Develop</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/api.html">API</a></li>
 </ul>
 

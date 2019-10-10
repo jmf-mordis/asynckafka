@@ -14,7 +14,7 @@
     <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Develop" href="develop.html" />
+    <link rel="next" title="API" href="api/api.html" />
     <link rel="prev" title="Logging" href="logging.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -35,9 +35,7 @@
   <div class="section" id="error-callback">
 <h1>Error callback<a class="headerlink" href="#error-callback" title="Permalink to this headline">¶</a></h1>
 <p>The error callback can be passed to the consumer of producer, it should be a
-coroutine function and accepts one parameter. This parameter is a
-KafkaError. This error_callback is thread safe and it is executed in the loop
-used by the consumer or producer.</p>
+coroutine function and accepts one parameter that it is a KafkaError.</p>
 <p>Example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">error_callback</span><span class="p">(</span><span class="n">kafka_error</span><span class="p">):</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">kafka_error</span><span class="p">)</span>
@@ -85,7 +83,6 @@ used by the consumer or producer.</p>
 <li class="toctree-l1"><a class="reference internal" href="rdk_configuration.html">RdKafka configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="logging.html">Logging</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Error callback</a></li>
-<li class="toctree-l1"><a class="reference internal" href="develop.html">Develop</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/api.html">API</a></li>
 </ul>
 
@@ -94,7 +91,7 @@ used by the consumer or producer.</p>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
       <li>Previous: <a href="logging.html" title="previous chapter">Logging</a></li>
-      <li>Next: <a href="develop.html" title="next chapter">Develop</a></li>
+      <li>Next: <a href="api/api.html" title="next chapter">API</a></li>
   </ul></li>
 </ul>
 </div>

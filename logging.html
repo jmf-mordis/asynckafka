@@ -34,24 +34,25 @@
             
   <div class="section" id="logging">
 <h1>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h1>
-<p>Asynckafka uses the standard python logging library, with “asynckafka” as
+<p>Asynckafka uses the standard Python logging library, with “asynckafka” as
 logger.</p>
-<p>To enable all the logging to stdout it is enough with:</p>
+<p>To enable all the logging to stdout:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 
 <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">stream</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>There are some python logger debug lines disabled by default in the consumer
-and producer. The reason is avoid python calls and python strings
-composition for the python logger in the critical path of cython. Anyway, you
-can enable them with:</p>
+<p>There are some Python debug lines disabled by default in the consumer
+and producer to avoid the Python string composition of the logger in the</p>
+<blockquote>
+<div><p>critical path of Cython. Anyway, you can enable it with:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asynckafka</span>
 
 <span class="n">asynckafka</span><span class="o">.</span><span class="n">set_debug</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
+</div></blockquote>
 </div>
 
 
@@ -88,7 +89,6 @@ can enable them with:</p>
 <li class="toctree-l1"><a class="reference internal" href="rdk_configuration.html">RdKafka configuration</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Logging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="error_callback.html">Error callback</a></li>
-<li class="toctree-l1"><a class="reference internal" href="develop.html">Develop</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/api.html">API</a></li>
 </ul>
 
