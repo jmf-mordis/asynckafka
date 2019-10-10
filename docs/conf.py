@@ -20,11 +20,11 @@
 # -- Project information -----------------------------------------------------
 
 project = 'Asynckafka'
-copyright = '2018, José Melero Fernández'
+copyright = '2018-present, José Melero Fernández'
 author = 'José Melero Fernández'
 
 # The short X.Y version
-version = ''
+version = '0.1.3'
 # The full version, including alpha/beta/rc tags
 release = ''
 
@@ -41,6 +41,7 @@ release = ''
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
+    'sphinx.ext.githubpages'
 ]
 
 # Add any paths that contain templates here, relative to this directory.

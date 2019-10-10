@@ -8,14 +8,26 @@ python:
 before_install:
   - sudo apt-get update
   - sudo apt-get install -y librdkafka1 librdkafka-dev
-install: pip install -r requirements.txt
-script: make test
+install: pip install -r requirements.txt && make compile
+script:
+  - make test
+  - make docs
 deploy:
-  provider: pypi
-  user:
-    secure: "xcUjF5/tL9+tC5F2vIc4oNF184rEVRVIfYUxcuRrkS/QVzu23TB16DL12StbX+EOwGH+BvjJ0xKMUV7UyulsiSY8EDRqPYV/T62sbT9r7TTi4YueW/SxoF7Q8BpISojsaRg3YDTshM5I7ukrkFK4OuS6Xvw6N3WZ1jPKwmEgFxCahYuySvXx+2x6GP2q/a3StcM4Tmw+1uFGP+pY96Fk5SRODbrsVI3g0eWdVShk41rbh1MxyHq2GhEsZtD61n5n7Ia5ULlt3o41zx31cVKg2/MPJnv5WFttcp2vtS5ZqeqDy4ubfRPMdDts5VrKzr0atLFgG6HU9sQevBTySOsZdPirgo561kzmjfvhCzSk59iRf8PpwGYN1O3UBW0BcaxhVOI8d0n6Mpw+vcpL2ojbjMFzstwJICt8g45plYuSeqN2w4BMQ46mc9RWqJTcK6EDsRpvPheSuGnmLKIFkaFBbB2xbpoxN5Uf8o2hokukQL/VVurDcuniehaWsWguS77P3FkOBom+sjLJg9y6PFzOutrU86TkG7lubf9E3umVyvhfvkc26QSuWYsEf2PYP2VnkhPFdH2IHEiQBbEP8Z7U7NLZQq+X48y+wrFBJb/E0jxH4ola0gzBJQhlPdQzlSrJDfYCUtrBnbPWXvde5QLe22IwQr/bOPh9R2tzwOc8iTg="
-  password:
-    secure: "tBu+bMuSG2467xU8+FY4b7mfou9cVAO7JUuisFURFn5TUFg3w6TyI5IMhXgP5bnV5M5NaU/IytIz/4wIwj6f0v6ezxNXj1oupbhKS/Eq5Zu+G5BWOMJDD5XwcB0xjWuFl/KdmVAUvyOnePatzKMI7Bacr6SRiqLHtOvZcDpVzFkNpGnT4mXtxVc3+yaXDHAh68B9Pv4Lzp1xHjmaxBgiuUpMsoqOpr71PVJQqMi8zkDk8eroKRy6bS19pasDzG6/9ZQK9AVEtGODSfd9/v3EOGMDg6EKGaWl1t9WumNobeLAAvt3aPS9I3QaumpDp8p5YaKNPUzrR3/PYd4HXbKcxfB2fTjlPLU+bPKymz4TRaBCMpg/H/DnNWQ/OprVD14F+4CzvAQsQaR4XQmRYfsf1CXljJ+NKEbhsze/E0n+/tfPznX7k5Sg6au07KGAWwv8LT992BSMl8guUVVIhnQXiyPjpFRvgxI7z7bQghrcMvAoMH7sPQTl8nvQpHbOcQ3AvKAxGk44rw1OmhtFrM40O8X4pB5ov+Igs3Qm0yNZxKZ3eOiie8EQ3881A47Vkmb55M+AWiM8ILQw/sU+SldHAOWzVNf3lpBdqUy8bVDsKXI6gNxYr9gihgNOFcR0SfSZeTpyYZNDgshEbQ4LGOHSgWrotXbqUEtLuKQqtfawUpQ="
-  on:
-    tags: true
-    branch: master
+  - provider: pypi
+    skip_existing: true
+    user:
+      secure: "xcUjF5/tL9+tC5F2vIc4oNF184rEVRVIfYUxcuRrkS/QVzu23TB16DL12StbX+EOwGH+BvjJ0xKMUV7UyulsiSY8EDRqPYV/T62sbT9r7TTi4YueW/SxoF7Q8BpISojsaRg3YDTshM5I7ukrkFK4OuS6Xvw6N3WZ1jPKwmEgFxCahYuySvXx+2x6GP2q/a3StcM4Tmw+1uFGP+pY96Fk5SRODbrsVI3g0eWdVShk41rbh1MxyHq2GhEsZtD61n5n7Ia5ULlt3o41zx31cVKg2/MPJnv5WFttcp2vtS5ZqeqDy4ubfRPMdDts5VrKzr0atLFgG6HU9sQevBTySOsZdPirgo561kzmjfvhCzSk59iRf8PpwGYN1O3UBW0BcaxhVOI8d0n6Mpw+vcpL2ojbjMFzstwJICt8g45plYuSeqN2w4BMQ46mc9RWqJTcK6EDsRpvPheSuGnmLKIFkaFBbB2xbpoxN5Uf8o2hokukQL/VVurDcuniehaWsWguS77P3FkOBom+sjLJg9y6PFzOutrU86TkG7lubf9E3umVyvhfvkc26QSuWYsEf2PYP2VnkhPFdH2IHEiQBbEP8Z7U7NLZQq+X48y+wrFBJb/E0jxH4ola0gzBJQhlPdQzlSrJDfYCUtrBnbPWXvde5QLe22IwQr/bOPh9R2tzwOc8iTg="
+    password:
+      secure: "tBu+bMuSG2467xU8+FY4b7mfou9cVAO7JUuisFURFn5TUFg3w6TyI5IMhXgP5bnV5M5NaU/IytIz/4wIwj6f0v6ezxNXj1oupbhKS/Eq5Zu+G5BWOMJDD5XwcB0xjWuFl/KdmVAUvyOnePatzKMI7Bacr6SRiqLHtOvZcDpVzFkNpGnT4mXtxVc3+yaXDHAh68B9Pv4Lzp1xHjmaxBgiuUpMsoqOpr71PVJQqMi8zkDk8eroKRy6bS19pasDzG6/9ZQK9AVEtGODSfd9/v3EOGMDg6EKGaWl1t9WumNobeLAAvt3aPS9I3QaumpDp8p5YaKNPUzrR3/PYd4HXbKcxfB2fTjlPLU+bPKymz4TRaBCMpg/H/DnNWQ/OprVD14F+4CzvAQsQaR4XQmRYfsf1CXljJ+NKEbhsze/E0n+/tfPznX7k5Sg6au07KGAWwv8LT992BSMl8guUVVIhnQXiyPjpFRvgxI7z7bQghrcMvAoMH7sPQTl8nvQpHbOcQ3AvKAxGk44rw1OmhtFrM40O8X4pB5ov+Igs3Qm0yNZxKZ3eOiie8EQ3881A47Vkmb55M+AWiM8ILQw/sU+SldHAOWzVNf3lpBdqUy8bVDsKXI6gNxYr9gihgNOFcR0SfSZeTpyYZNDgshEbQ4LGOHSgWrotXbqUEtLuKQqtfawUpQ="
+    on:
+      tags: true
+      branch: master
+  - provider: pages
+    local_dir: docs/_build/html
+    keep_history: true
+    skip_cleanup: true
+    committer_from_gh: true
+    github_token:
+      secure: "VmFZyjCsVkq7E3uujQ25/dLL5fKPH75f9NB/2LUa76MJlnU9Zf+/7rXr/uG13EYSosss8OObpDrTKIVhVRm7lGJHQuPmoSdk6U7YR0sYkgbClyj6+4tM3a9JrWjB0F2yXX+WeLI7nzVlqExuFUs/PHmt2Ko04IyzPeGIsw0x5Br3jTnp5LalWrhJnBhj0U9qf67zXkNVwbYpliIzBIS6BiLnWuZoHSaybwt3YZxEY+27Mq/drSpy60cDJpwz8fNN2b80IZ+t14gEvLnjdGa8T2/eJFHwf8JJ+IYzuRJnC3o3CoANxbaLgTr8zrujNJtRU6l4tGsCRR91Ox6MbhCrXRXn+uCguh4tLPMR+IbiERWN7k45YQR/LgPkKO0M5b+rcqFmD7UXovD/kFjIcjOgPi92WrGSEK/EO3b/9wB5wILIH6orVaIbmi+7aJNKi5u8pouJSOgaff6m8D2HThDfJDoMkmZgjJha0fHPEIjxa6qzTySV9uF4lqD3umf+DHZK+aeKLGvbvzi/lfxch/CcW8thnQlPo8Iqbny1PANf2xcPIJEPq2F1KUMH/u2pulL0IbHahlrSwX8KdjCNeNr4us3P4y8nc2N8/2P02lGO8cVciw+YIxLTn0gFOcsb8deVy935ZKBsfvYtpmpUtxcFVOrRfAbrZyJTAvr66Y23ScQ="
+    on:
+      branch: master

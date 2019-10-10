@@ -2,7 +2,8 @@
 Asynckafka
 **********
 
-[![Build Status](https://travis-ci.com/jmf-mordis/asynckafka.svg?branch=master)](https://travis-ci.com/jmf-mordis/asynckafka)
+.. image:: https://travis-ci.com/jmf-mordis/asynckafka.svg?branch=master
+    :target: https://travis-ci.com/jmf-mordis/asynckafka
 
 Fast python kafka client for asyncio.
 Asynckafka is written in Cython_ on top of Rdkafka_ as kafka driver.
@@ -30,13 +31,13 @@ Comparison between Asynckafka and Aiokafka in production and consumption.
 Production
 **********
 
-.. image:: docs/benchmark/graphs/producer.png
+.. image:: https://github.com/jmf-mordis/asynckafka/raw/master/docs/benchmark/graphs/producer.png
    :width: 800
 
 Consumption
 ***********
 
-.. image:: docs/benchmark/graphs/consumer.png
+.. image:: https://github.com/jmf-mordis/asynckafka/raw/master/docs/benchmark/graphs/consumer.png
    :width: 800
 
 The benchmark used for asynckafka is in benchmark directory while the

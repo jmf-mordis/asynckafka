@@ -23,10 +23,10 @@ compile: clean setup-build
 
 docs:
 	pip install . --no-cache --upgrade
-	sphinx-autobuild -b html ./docs ./docs/_build/html
+	$(MAKE) -C docs html
 
 
-test: compile
+test:
 	docker-compose up -d
 	sleep 20
 	python -m unittest tests.asynckafka_tests -v
