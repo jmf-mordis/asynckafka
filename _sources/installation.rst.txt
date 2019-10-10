@@ -29,7 +29,7 @@ For the MacOS users with Homebrew, the rdkafka headers already comes with the li
 Install asynckafka package
 --------------------------
 
-You also are going to need gcc to be able to compile the
+You also are going to need gcc to be able to compile the Cython package.
 
 The package is in Pypi, you can install it with pip::
 
