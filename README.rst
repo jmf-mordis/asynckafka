@@ -5,28 +5,63 @@ Asynckafka
 .. image:: https://travis-ci.com/jmf-mordis/asynckafka.svg?branch=master
     :target: https://travis-ci.com/jmf-mordis/asynckafka
 
-Fast python kafka client for asyncio.
-Asynckafka is written in Cython_ on top of Rdkafka_ as kafka driver.
-
-Right now it is work in progress, so use it at our own risk. Before the 1.0.0
-release i don't warranty stability in the api between the minor version
-numbers.
+Fast python Kafka client for asyncio.
+Asynckafka is written in Cython_ on top of Rdkafka_ as Kafka driver.
 
 .. _Cython: cython.org
 .. _Rdkafka: https://github.com/edenhill/librdkafka
 
-Documentation_
+The documentation can be found here_.
 
-.. _Documentation: https://jmf-mordis.github.io/asynckafka/
+.. _here: https://jmf-mordis.github.io/asynckafka/
 
+Features
+========
+
+* Consumer using a balanced group
+* Producer
+
+The library was born as a project to learn Cython, right now it only has the basic
+features implemented, some of the most important missing features are:
+
+* Offset management in the consumer
+* Precise partition management
+
+Examples
+========
+
+Simple consumer
+---------------
+
+How to use a consumer::
+
+    consumer = Consumer(
+        brokers='localhost:9092',
+        topics=['my_topic'],
+        group_id='my_group_id',
+    )
+    consumer.start()
+
+    async for message in consumer:
+        print(f"Received message: {message.payload}")
+
+Simple producer
+---------------
+
+How to use a producer::
+
+    producer = Producer(brokers="localhost:9092")
+    producer.start()
+    await producer.produce("my_topic", b"my_message")
 
 Benchmark
 #########
 
-This project was born from the need to have a high performance kafka library
-for asyncio.
+The test was performed in June of 2018 using a single Kafka broker without replication.
+The purpose of the benchmark was only to have an idea of the order of magnitude of the
+library's performance under these conditions.
 
-Comparison between Asynckafka and Aiokafka in production and consumption.
+Comparison between asynckafka and aiokafka in production and consumption:
 
 Production
 **********

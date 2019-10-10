@@ -2,9 +2,7 @@ Error callback
 ==============
 
 The error callback can be passed to the consumer of producer, it should be a
-coroutine function and accepts one parameter. This parameter is a
-KafkaError. This error_callback is thread safe and it is executed in the loop
-used by the consumer or producer.
+coroutine function and accepts one parameter that it is a KafkaError.
 
 Example::
 

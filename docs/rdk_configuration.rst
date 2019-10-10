@@ -9,8 +9,8 @@ https://github.com/edenhill/librdkafka/blob/v0.11.3/CONFIGURATION.md
 
 .. _configuration: https://github.com/edenhill/librdkafka/blob/v0.11.3/CONFIGURATION.md
 
-The asynckafka producer and consumer accepts two configuration dicts. The
-dicts be strings in the key and value.
+The asynckafka producer and consumer accepts configuration dicts, one for the producer
+or consumer and another for the topic.
 
 Consumer configuration, example::
 
@@ -39,13 +39,5 @@ Producer configuration, example::
         },
     )
 
-The configuration `rdk_consumer_config` correspond with those that can
-be found at 'Global configuration properties', section of
-rdkafka configuration_ documentation (less the exclusive configuration from
-the producer, indicated with a 'P' to the left of the name). The
-rdk_producer_config is the opposite of the consumer, so
-you should exclude the ones indicated with 'C'.
-
-At the end of configuration_ you can find the 'Topic configuration
-properties', there is located the configuration that can be passed to the
-argument `rdk_topic_config` of the consumer of producer.
+If you are looking to use this library, you should carefully read the configuration of
+rdkafka in its different sections, because in the end this library is a wrapper of rdkafka.
