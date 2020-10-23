@@ -15,7 +15,7 @@ class TestsIntegrationProducer(IntegrationTestCase):
     def setUp(self):
         super().setUp()
         self.producer = Producer(
-            brokers="127.0.0.1",
+            brokers=self.brokers,
             loop=self.loop
         )
 
@@ -31,7 +31,7 @@ class TestsIntegrationProducer(IntegrationTestCase):
 
     @unittest.skipIf(os.environ.get("SHORT"), "Skipping long tests")
     def test_produce_one_message(self):
-        consumer = KafkaConsumer(self.test_topic)
+        consumer = KafkaConsumer(self.test_topic, bootstrap_servers=self.brokers)
 
         self.producer.start()
         coro = self.producer.produce(self.test_topic, self.test_message)
@@ -43,7 +43,7 @@ class TestsIntegrationProducer(IntegrationTestCase):
 
     @unittest.skipIf(os.environ.get("SHORT"), "Skipping long tests")
     def test_produce_one_message_with_key(self):
-        consumer = KafkaConsumer(self.test_topic)
+        consumer = KafkaConsumer(self.test_topic, bootstrap_servers=self.brokers)
 
         self.producer.start()
         coro = self.producer.produce(self.test_topic, self.test_message,
@@ -57,7 +57,7 @@ class TestsIntegrationProducer(IntegrationTestCase):
 
     @unittest.skipIf(os.environ.get("SHORT"), "Skipping long tests")
     def test_produce_thousand_of_messages(self):
-        consumer = KafkaConsumer(self.test_topic)
+        consumer = KafkaConsumer(self.test_topic, bootstrap_servers=self.brokers)
         self.producer.start()
         n_messages = 1000
 
