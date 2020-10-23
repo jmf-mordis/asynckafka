@@ -62,6 +62,33 @@ cdef class RdKafkaConsumer:
     def add_topic(self, topic: str):
         self.topics.append(topic.encode())
 
+    def seek(self, topic_partition, timeout):
+      print("called rdk_consumer seek with topic:", topic_partition.topic,
+          'partition:', topic_partition.partition,
+          'offset:', topic_partition.offset,
+          'meta:', topic_partition.metadata
+          )
+      cdef crdk.rd_kafka_topic_t *rdk_topic
+      print("define rdk_topic")
+      rdk_topic = crdk.rd_kafka_topic_new(
+          self.consumer,
+          topic_partition.topic,
+          self.topic_conf
+      )
+      print("rdk_topic defined")
+      if not rdk_topic:
+          err_str = "Failed to create topic object"
+          logger.error(err_str)
+          print(err_str)
+          raise exceptions.ConsumerError(err_str)
+      print("call seek!")
+      err = crdk.rd_kafka_seek(rdk_topic, topic_partition.partition, topic_partition.offset, 0)
+      if err != crdk.RD_KAFKA_RESP_ERR_NO_ERROR:
+          err_str = bytes(crdk.rd_kafka_err2str(err)).decode()
+          logger.error("Timeout occurred while making seek ")
+          raise exceptions.ConsumerError(err_str)
+      logger.info('Seek done.')
+
     def _init_rd_kafka_configs(self):
         self.conf = crdk.rd_kafka_conf_new()
         crdk.rd_kafka_conf_set_log_cb(self.conf, cb_logger)
