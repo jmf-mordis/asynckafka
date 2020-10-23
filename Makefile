@@ -27,6 +27,4 @@ docs:
 
 
 test:
-	docker-compose up -d
-	sleep 20
 	python -m unittest tests.asynckafka_tests -v
