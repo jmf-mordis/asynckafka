@@ -68,8 +68,6 @@ cdef class Consumer:
       Raises:
           asynckafka.exceptions.ConsumerError: Request timeout.
       """
-      print("called consumer seek with topic:", topic_partition.topic, 'partition:',
-                topic_partition.partition, 'offset:', topic_partition.offset)
       self.rdk_consumer.seek(topic_partition, timeout)
 
     def is_consuming(self):
