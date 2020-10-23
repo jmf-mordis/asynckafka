@@ -31,12 +31,20 @@ class TestIntegrationConsumer(IntegrationTestCase):
             self.stream_consumer.stop()
         super().tearDown()
 
+    def print_message(self, message):
+        print("\n>>>> Message from topic: {} offset: {} payload: {}".format(message.topic, message.offset, message.payload))
+
+    def show_offsets(self):
+        for tp in self.stream_consumer.assignment():
+            print("\n>>>> topic:", tp.topic, "partition:", tp.partition, "offset:", tp.offset, "\n")
+
     @unittest.skipIf(os.environ.get("SHORT"), "Skipping long tests")
     def test_consume_one_message(self):
         confirm_message = asyncio.Future(loop=self.loop)
 
         async def consume_messages():
             async for message in self.stream_consumer:
+                self.print_message(message)
                 confirm_message.set_result(message)
 
         self.stream_consumer.start()
@@ -65,6 +73,7 @@ class TestIntegrationConsumer(IntegrationTestCase):
 
         async def consume_messages():
             async for message in self.stream_consumer:
+                self.print_message(message)
                 confirm_message.set_result(message)
 
         self.stream_consumer.start()
@@ -76,6 +85,7 @@ class TestIntegrationConsumer(IntegrationTestCase):
         self.loop.run_until_complete(coro)
 
         consumed_message = confirm_message.result()
+        self.show_offsets()
         self.assertEqual(consumed_message.payload, self.test_message)
         self.assertEqual(consumed_message.topic, self.test_topic)
         self.assertEqual(consumed_message.key, self.test_key)
@@ -88,6 +98,7 @@ class TestIntegrationConsumer(IntegrationTestCase):
 
         async def consume_messages():
             async for message in self.stream_consumer:
+                self.print_message(message)
                 consumed_messages.put_nowait(message)
 
         self.stream_consumer.start()
@@ -114,6 +125,50 @@ class TestIntegrationConsumer(IntegrationTestCase):
                 consumed_messages.get_nowait().payload,
                 self.test_message
             )
+
+    def test_seek_topic_offset(self):
+        n_messages = 100
+        consumed_messages = asyncio.Queue(maxsize=n_messages, loop=self.loop)
+
+        async def consume_messages():
+            async for message in self.stream_consumer:
+                self.print_message(message)
+                consumed_messages.put_nowait(message)
+
+        self.stream_consumer.start()
+
+        produce_to_kafka(self.test_topic, self.test_message, number=1000)
+
+        asyncio.ensure_future(consume_messages(), loop=self.loop)
+
+        async def wait_for_messages(count):
+            while True:
+                await asyncio.sleep(0.1)
+                if consumed_messages.qsize() == count:
+                    break
+
+        coro = asyncio.wait_for(
+            wait_for_messages(n_messages),
+            timeout=30,
+            loop=self.loop
+        )
+        self.loop.run_until_complete(coro)
+
+        for tp in self.stream_consumer.assignment():
+            tp.offset = 49
+            self.stream_consumer.seek(tp)
+
+        consumed_messages = asyncio.Queue(maxsize=n_messages, loop=self.loop)
+        n_messages = 10
+        coro = asyncio.wait_for(
+            wait_for_messages(n_messages),
+            timeout=30,
+            loop=self.loop
+        )
+        self.loop.run_until_complete(coro)
+
+
+
 
     def test_two_starts_raise_consumer_error(self):
         self.stream_consumer.start()
@@ -157,4 +212,3 @@ class TestIntegrationConsumer(IntegrationTestCase):
         self.stream_consumer.start()
         coro = asyncio.wait_for(wait_for_event(), timeout=10)
         self.loop.run_until_complete(coro)
-
