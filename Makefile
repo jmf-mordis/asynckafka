@@ -28,3 +28,7 @@ docs:
 
 test:
 	python -m unittest tests.asynckafka_tests -v
+
+run_test:
+	docker-compose run app /bin/bash -c "make && make test"
+	# docker run -it -v /var/run/docker.sock:/var/run/docker.sock asyncbuild /bin/bash -c "make && make test"
