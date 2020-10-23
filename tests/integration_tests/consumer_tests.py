@@ -31,20 +31,12 @@ class TestIntegrationConsumer(IntegrationTestCase):
             self.stream_consumer.stop()
         super().tearDown()
 
-    def print_message(self, message):
-        print("\n>>>> Message from topic: {} offset: {} payload: {}".format(message.topic, message.offset, message.payload))
-
-    def show_offsets(self):
-        for tp in self.stream_consumer.assignment():
-            print("\n>>>> topic:", tp.topic, "partition:", tp.partition, "offset:", tp.offset, "\n")
-
     @unittest.skipIf(os.environ.get("SHORT"), "Skipping long tests")
     def test_consume_one_message(self):
         confirm_message = asyncio.Future(loop=self.loop)
 
         async def consume_messages():
             async for message in self.stream_consumer:
-                self.print_message(message)
                 confirm_message.set_result(message)
 
         self.stream_consumer.start()
@@ -73,7 +65,6 @@ class TestIntegrationConsumer(IntegrationTestCase):
 
         async def consume_messages():
             async for message in self.stream_consumer:
-                self.print_message(message)
                 confirm_message.set_result(message)
 
         self.stream_consumer.start()
@@ -85,7 +76,6 @@ class TestIntegrationConsumer(IntegrationTestCase):
         self.loop.run_until_complete(coro)
 
         consumed_message = confirm_message.result()
-        self.show_offsets()
         self.assertEqual(consumed_message.payload, self.test_message)
         self.assertEqual(consumed_message.topic, self.test_topic)
         self.assertEqual(consumed_message.key, self.test_key)
@@ -98,7 +88,6 @@ class TestIntegrationConsumer(IntegrationTestCase):
 
         async def consume_messages():
             async for message in self.stream_consumer:
-                self.print_message(message)
                 consumed_messages.put_nowait(message)
 
         self.stream_consumer.start()
@@ -128,46 +117,31 @@ class TestIntegrationConsumer(IntegrationTestCase):
 
     def test_seek_topic_offset(self):
         n_messages = 100
-        consumed_messages = asyncio.Queue(maxsize=n_messages, loop=self.loop)
-
-        async def consume_messages():
-            async for message in self.stream_consumer:
-                self.print_message(message)
-                consumed_messages.put_nowait(message)
-
+        timeout = 5.0
+        produce_to_kafka(self.test_topic, self.test_message, number=n_messages)
         self.stream_consumer.start()
 
-        produce_to_kafka(self.test_topic, self.test_message, number=1000)
+        async def init_consumer():
+            await asyncio.wait_for(self.stream_consumer.__anext__(), timeout=timeout)
+        self.loop.run_until_complete(init_consumer())
 
-        asyncio.ensure_future(consume_messages(), loop=self.loop)
-
-        async def wait_for_messages(count):
-            while True:
-                await asyncio.sleep(0.1)
-                if consumed_messages.qsize() == count:
-                    break
-
-        coro = asyncio.wait_for(
-            wait_for_messages(n_messages),
-            timeout=30,
-            loop=self.loop
-        )
-        self.loop.run_until_complete(coro)
-
+        seek_offset = 50
         for tp in self.stream_consumer.assignment():
-            tp.offset = 49
+            tp.offset = seek_offset
             self.stream_consumer.seek(tp)
 
-        consumed_messages = asyncio.Queue(maxsize=n_messages, loop=self.loop)
-        n_messages = 10
-        coro = asyncio.wait_for(
-            wait_for_messages(n_messages),
-            timeout=30,
-            loop=self.loop
-        )
-        self.loop.run_until_complete(coro)
+        async def consume_messages(buffer, limit):
+            async for message in self.stream_consumer:
+                buffer.put_nowait(message)
+                if buffer.qsize() >= limit:
+                    break
 
-
+        buffer = asyncio.Queue(maxsize=n_messages, loop=self.loop)
+        async def main():
+            await asyncio.wait_for(consume_messages(buffer, 1), timeout=timeout)
+        self.loop.run_until_complete(main())
+        first_element = buffer.get_nowait()
+        self.assertEqual(first_element.offset, seek_offset)
 
 
     def test_two_starts_raise_consumer_error(self):
