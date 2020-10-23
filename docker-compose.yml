@@ -9,6 +9,8 @@ services:
       - kafka
     environment:
       MALLOC_CHECK_: 2
+    volumes:
+      - ${PWD}:/app
   zookeeper:
     image: zookeeper:3.4.10
     hostname: zookeeper

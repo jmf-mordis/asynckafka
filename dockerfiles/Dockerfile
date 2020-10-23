@@ -9,7 +9,3 @@ RUN apt-get update \
 
 ENV HOME /app
 WORKDIR $HOME
-
-COPY . $HOME/
-
-CMD ["make"]
