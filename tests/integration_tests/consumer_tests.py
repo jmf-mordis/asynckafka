@@ -9,7 +9,7 @@ import os
 from asynckafka import exceptions
 from asynckafka.consumer.consumer import Consumer
 from tests.integration_tests.test_utils import IntegrationTestCase, \
-    test_consumer_settings, test_topic_settings, produce_to_kafka
+    test_consumer_settings, test_topic_settings, produce_to_kafka, kafka_host
 
 # logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
@@ -33,7 +33,7 @@ class TestIntegrationConsumer(IntegrationTestCase):
 
     @unittest.skipIf(os.environ.get("SHORT"), "Skipping long tests")
     def test_consume_one_message(self):
-        confirm_message = asyncio.Future(loop=self.loop)
+        confirm_message = asyncio.Future()
 
         async def consume_messages():
             async for message in self.stream_consumer:
@@ -84,7 +84,7 @@ class TestIntegrationConsumer(IntegrationTestCase):
     @unittest.skipIf(os.environ.get("SHORT"), "Skipping long tests")
     def test_consume_one_thousand_of_messages(self):
         n_messages = 1000
-        consumed_messages = asyncio.Queue(maxsize=n_messages, loop=self.loop)
+        consumed_messages = asyncio.Queue(maxsize=n_messages)
 
         async def consume_messages():
             async for message in self.stream_consumer:

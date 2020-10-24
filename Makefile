@@ -18,7 +18,7 @@ setup-build:
 	$(PYTHON) setup.py build_ext --inplace --tests
 
 
-compile: clean setup-build
+compile: setup-build
 
 
 docs:
@@ -26,7 +26,13 @@ docs:
 	$(MAKE) -C docs html
 
 
-test:
-	docker-compose up -d
+docker-up:
+	docker-compose up -d kafka
 	sleep 20
-	python -m unittest tests.asynckafka_tests -v
+
+
+test:
+	$(PYTHON) -m unittest tests.asynckafka_tests -v
+
+
+test-ci: docker-up test

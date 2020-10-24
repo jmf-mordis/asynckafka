@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import sys
+import os
 import unittest
 import uuid
 
@@ -8,9 +9,11 @@ from kafka import KafkaProducer
 
 # logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
+kafka_host = os.getenv('KAFKA_HOST', '127.0.0.1')
+
 
 def produce_to_kafka(topic, message, key=None, number=1):
-    producer = KafkaProducer(bootstrap_servers='localhost:9092')
+    producer = KafkaProducer(bootstrap_servers=f'{kafka_host}:9092')
     [producer.send(topic, message, key=key) for _ in range(number)]
     producer.close()
 
@@ -27,7 +30,7 @@ test_topic_settings = {
 
 class IntegrationTestCase(unittest.TestCase):
 
-    brokers = "127.0.0.1:9092"
+    brokers = f"{kafka_host}:9092"
 
     def setUp(self):
         self.test_message = b'some_message_bytes'
