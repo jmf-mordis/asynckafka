@@ -5,6 +5,7 @@ services:
 python:
   - 3.6
   - 3.7
+  - 3.8
 before_install:
   - sudo apt-get update
   - sudo apt-get install -y librdkafka1 librdkafka-dev
