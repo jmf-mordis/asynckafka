@@ -120,10 +120,9 @@ class TestIntegrationConsumer(IntegrationTestCase):
         timeout = 5.0
         produce_to_kafka(self.test_topic, self.test_message, number=n_messages)
         self.stream_consumer.start()
-
-        async def init_consumer():
-            await asyncio.wait_for(self.stream_consumer.__anext__(), timeout=timeout)
-        self.loop.run_until_complete(init_consumer())
+        self.loop.run_until_complete(
+            asyncio.wait_for(self.stream_consumer.__anext__(), timeout=timeout)
+        )
 
         seek_offset = 50
         for tp in self.stream_consumer.assignment():
@@ -137,12 +136,37 @@ class TestIntegrationConsumer(IntegrationTestCase):
                     break
 
         buffer = asyncio.Queue(maxsize=n_messages, loop=self.loop)
+        self.loop.run_until_complete(
+            asyncio.wait_for(consume_messages(buffer, 1), timeout=timeout)
+        )
+        first_element = buffer.get_nowait()
+        self.assertEqual(first_element.offset, seek_offset)
+
+    def test_assign_topic_offset(self):
+        n_messages = 100
+        timeout = 5.0
+        produce_to_kafka(self.test_topic, self.test_message, number=n_messages)
+        seek_offset = 50
+        self.stream_consumer.start()
+
+        async def init_consumer():
+            await asyncio.wait_for(self.stream_consumer.__anext__(), timeout=timeout)
+        self.loop.run_until_complete(init_consumer())
+
+        self.stream_consumer.assign_topic_offset(topic=self.test_topic, partition=0, offset=seek_offset)
+
+        async def consume_messages(buffer, limit):
+            async for message in self.stream_consumer:
+                buffer.put_nowait(message)
+                if buffer.qsize() >= limit:
+                    break
+
+        buffer = asyncio.Queue(maxsize=n_messages, loop=self.loop)
         async def main():
             await asyncio.wait_for(consume_messages(buffer, 1), timeout=timeout)
         self.loop.run_until_complete(main())
         first_element = buffer.get_nowait()
         self.assertEqual(first_element.offset, seek_offset)
-
 
     def test_two_starts_raise_consumer_error(self):
         self.stream_consumer.start()

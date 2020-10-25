@@ -128,6 +128,12 @@ cdef class RdKafkaConsumer:
             raise exceptions.ConsumerError(err_str)
         logger.debug("Added brokers to kafka consumer")
 
+    def assign_topic_offset(self, topic, partition, offset):
+      partitions = crdk.rd_kafka_topic_partition_list_new(0)
+      crdk.rd_kafka_topic_partition_list_add(partitions, topic.encode(), partition).offset = offset
+      crdk.rd_kafka_assign(self.consumer, partitions)
+      crdk.rd_kafka_topic_partition_list_destroy(partitions)
+
     def _init_rd_kafka_topic_partition_lists(self):
         cdef int32_t partition
         cdef char *topic_ptr

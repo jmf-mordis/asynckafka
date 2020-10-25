@@ -122,6 +122,12 @@ cdef class Consumer:
             self.consumer_state = consumer_states.CONSUMING
             logger.info('Consumer started')
 
+    def assign_topic_offset(self, topic, partition, offset):
+      """
+      Assign topic/partition with specified offset.
+      """
+      self.rdk_consumer.assign_topic_offset(topic, partition, offset)
+
     def _post_start(self):
         """
         Internal method to be overwritten by other consumers that use this one
