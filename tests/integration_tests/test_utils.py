@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import sys
+import os
 import unittest
 import uuid
 
@@ -8,7 +9,8 @@ from kafka import KafkaProducer
 
 # logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
-BROKERS = "kafka:9092"
+BROKERS = os.getenv("BOOTSTRAP_SERVERS", "127.0.0.1:9092")
+
 
 def produce_to_kafka(topic, message, key=None, number=1):
     producer = KafkaProducer(bootstrap_servers=BROKERS)
