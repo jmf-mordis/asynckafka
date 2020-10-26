@@ -62,6 +62,25 @@ cdef class RdKafkaConsumer:
     def add_topic(self, topic: str):
         self.topics.append(topic.encode())
 
+    def seek(self, topic_partition, timeout):
+      cdef crdk.rd_kafka_topic_t *rdk_topic
+      rdk_topic = crdk.rd_kafka_topic_new(
+          self.consumer,
+          topic_partition.topic,
+          NULL
+      )
+      if not rdk_topic:
+          err_str = "Failed to create topic object"
+          logger.error(err_str)
+          print(err_str)
+          raise exceptions.ConsumerError(err_str)
+      err = crdk.rd_kafka_seek(rdk_topic, topic_partition.partition, topic_partition.offset, timeout)
+      if err != crdk.RD_KAFKA_RESP_ERR_NO_ERROR:
+          err_str = bytes(crdk.rd_kafka_err2str(err)).decode()
+          logger.error("Timeout occurred while making seek ")
+          raise exceptions.ConsumerError(err_str)
+      logger.info('Seek done.')
+
     def _init_rd_kafka_configs(self):
         self.conf = crdk.rd_kafka_conf_new()
         crdk.rd_kafka_conf_set_log_cb(self.conf, cb_logger)
@@ -108,6 +127,12 @@ cdef class RdKafkaConsumer:
             logger.error(err_str)
             raise exceptions.ConsumerError(err_str)
         logger.debug("Added brokers to kafka consumer")
+
+    def assign_topic_offset(self, topic, partition, offset):
+      partitions = crdk.rd_kafka_topic_partition_list_new(0)
+      crdk.rd_kafka_topic_partition_list_add(partitions, topic.encode(), partition).offset = offset
+      crdk.rd_kafka_assign(self.consumer, partitions)
+      crdk.rd_kafka_topic_partition_list_destroy(partitions)
 
     def _init_rd_kafka_topic_partition_lists(self):
         cdef int32_t partition

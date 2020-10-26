@@ -56,6 +56,20 @@ cdef class Consumer:
         self.poll_rd_kafka_task = None
         self.error_callback = error_callback
 
+
+    def seek(self, topic_partition, timeout=500):
+      """
+      Seek the topic_partition to specified offset.
+
+      Example:
+        topic_partition.offset = seek_offset
+        consumer.seek(topic_partition)
+
+      Raises:
+          asynckafka.exceptions.ConsumerError: Request timeout.
+      """
+      self.rdk_consumer.seek(topic_partition, timeout)
+
     def is_consuming(self):
         """
         Method for check the consumer state.
@@ -107,6 +121,12 @@ cdef class Consumer:
                     self, self.rdk_consumer.get_name())
             self.consumer_state = consumer_states.CONSUMING
             logger.info('Consumer started')
+
+    def assign_topic_offset(self, topic, partition, offset):
+      """
+      Assign topic/partition with specified offset.
+      """
+      self.rdk_consumer.assign_topic_offset(topic, partition, offset)
 
     def _post_start(self):
         """

@@ -295,13 +295,13 @@ cdef extern from "librdkafka/rdkafka.h":
 
     int64_t rd_kafka_message_timestamp (
             const rd_kafka_message_t *rkmessage,
-			rd_kafka_timestamp_type_t *tstype
+            rd_kafka_timestamp_type_t *tstype
     )
 
     ctypedef enum rd_kafka_timestamp_type_t:
-        RD_KAFKA_TIMESTAMP_NOT_AVAILABLE,
-        RD_KAFKA_TIMESTAMP_CREATE_TIME,
-        RD_KAFKA_TIMESTAMP_LOG_APPEND_TIME
+            RD_KAFKA_TIMESTAMP_NOT_AVAILABLE,
+            RD_KAFKA_TIMESTAMP_CREATE_TIME,
+            RD_KAFKA_TIMESTAMP_LOG_APPEND_TIME
 
     rd_kafka_resp_err_t rd_kafka_assignment(
             rd_kafka_t *rk,
@@ -309,13 +309,20 @@ cdef extern from "librdkafka/rdkafka.h":
     )
 
     rd_kafka_resp_err_t rd_kafka_position(
-           rd_kafka_t *rk,
-		   rd_kafka_topic_partition_list_t *partitions
+            rd_kafka_t *rk,
+		        rd_kafka_topic_partition_list_t *partitions
     )
 
     rd_kafka_resp_err_t rd_kafka_subscription(
             rd_kafka_t *rk,
             rd_kafka_topic_partition_list_t **topics
+    )
+
+    rd_kafka_resp_err_t rd_kafka_seek(
+            rd_kafka_topic_t *rkt,
+            int32_t partition,
+            int64_t offset,
+            int timeout_ms
     )
 
     rd_kafka_resp_err_t rd_kafka_commit(
@@ -326,6 +333,6 @@ cdef extern from "librdkafka/rdkafka.h":
 
     rd_kafka_resp_err_t rd_kafka_offset_store(
             rd_kafka_topic_t *rkt,
-			int32_t partition,
+			      int32_t partition,
             int64_t offset
     )

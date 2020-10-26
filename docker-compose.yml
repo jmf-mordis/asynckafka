@@ -1,10 +1,33 @@
 version: "3"
 services:
-  kafka:
-    image: spotify/kafkaproxy
-    ports:
-      - 9092:9092
-      - 2181:2181
+  app:
+    build:
+      context: .
+      dockerfile: $PWD/dockerfiles/Dockerfile
+    command: bash -c "make && make test"
+    depends_on:
+      - kafka
     environment:
-      ADVERTISED_HOST: '127.0.0.1'
-      ADVERTISED_PORT: 9092
+      MALLOC_CHECK_: 2
+    volumes:
+      - ${PWD}:/app
+  zookeeper:
+    image: zookeeper:3.4.10
+    hostname: zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+  kafka:
+    image: confluentinc/cp-kafka:3.3.1
+    hostname: kafka
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092"
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_BROKER_ID: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_DELETE_TOPIC_ENABLE: "true"

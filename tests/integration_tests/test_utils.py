@@ -8,9 +8,10 @@ from kafka import KafkaProducer
 
 # logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
+BROKERS = "kafka:9092"
 
 def produce_to_kafka(topic, message, key=None, number=1):
-    producer = KafkaProducer(bootstrap_servers='localhost:9092')
+    producer = KafkaProducer(bootstrap_servers=BROKERS)
     [producer.send(topic, message, key=key) for _ in range(number)]
     producer.close()
 
@@ -27,7 +28,7 @@ test_topic_settings = {
 
 class IntegrationTestCase(unittest.TestCase):
 
-    brokers = "127.0.0.1:9092"
+    brokers = BROKERS
 
     def setUp(self):
         self.test_message = b'some_message_bytes'

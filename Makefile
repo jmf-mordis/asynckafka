@@ -27,6 +27,7 @@ docs:
 
 
 test:
-	docker-compose up -d
-	sleep 20
 	python -m unittest tests.asynckafka_tests -v
+
+run_test:
+	docker-compose run app /bin/bash -c "make && make test"

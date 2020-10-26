@@ -11,6 +11,7 @@ with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as f:
 version = '0.1.3'
 module_name = 'asynckafka'
 github_username = 'jmf-mordis'
+language_level = '3'
 
 extensions = [
     'asynckafka.settings',
@@ -125,7 +126,7 @@ class LazyCommandClass(dict):
 
                     from Cython.Build import cythonize
 
-                    directives = {}
+                    directives = {'language_level' : language_level}
                     if self.cython_directives:
                         for directive in self.cython_directives.split(','):
                             k, _, v = directive.partition('=')
