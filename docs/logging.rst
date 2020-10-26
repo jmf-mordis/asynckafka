@@ -1,20 +1,19 @@
 Logging
 =======
 
-Asynckafka uses the standard python logging library, with "asynckafka" as
+Asynckafka uses the standard Python logging library, with "asynckafka" as
 logger.
 
-To enable all the logging to stdout it is enough with::
+To enable all the logging to stdout::
 
     import logging
     import sys
 
     logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
-There are some python logger debug lines disabled by default in the consumer
-and producer. The reason is avoid python calls and python strings
-composition for the python logger in the critical path of cython. Anyway, you
-can enable them with::
+There are some Python debug lines disabled by default in the consumer
+and producer to avoid the Python string composition of the logger in the
+ critical path of Cython. Anyway, you can enable it with::
 
     import asynckafka
 
