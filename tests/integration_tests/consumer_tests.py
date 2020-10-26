@@ -149,9 +149,9 @@ class TestIntegrationConsumer(IntegrationTestCase):
         seek_offset = 50
         self.stream_consumer.start()
 
-        async def init_consumer():
-            await asyncio.wait_for(self.stream_consumer.__anext__(), timeout=timeout)
-        self.loop.run_until_complete(init_consumer())
+        self.loop.run_until_complete(
+            asyncio.wait_for(self.stream_consumer.__anext__(), timeout=timeout)
+        )
 
         self.stream_consumer.assign_topic_offset(topic=self.test_topic, partition=0, offset=seek_offset)
 
@@ -162,9 +162,9 @@ class TestIntegrationConsumer(IntegrationTestCase):
                     break
 
         buffer = asyncio.Queue(maxsize=n_messages, loop=self.loop)
-        async def main():
-            await asyncio.wait_for(consume_messages(buffer, 1), timeout=timeout)
-        self.loop.run_until_complete(main())
+        self.loop.run_until_complete(
+            asyncio.wait_for(consume_messages(buffer, limit=1), timeout=timeout)
+        )
         first_element = buffer.get_nowait()
         self.assertEqual(first_element.offset, seek_offset)
 
