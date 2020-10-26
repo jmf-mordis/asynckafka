@@ -58,8 +58,6 @@ Benchmark
 #########
 
 The test was performed in June of 2018 using a single Kafka broker without replication.
-The purpose of the benchmark was only to have an idea of the order of magnitude of the
-library's performance under these conditions.
 
 Comparison between asynckafka and aiokafka in production and consumption:
 

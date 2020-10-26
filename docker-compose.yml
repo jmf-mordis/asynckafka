@@ -8,3 +8,12 @@ services:
     environment:
       ADVERTISED_HOST: '127.0.0.1'
       ADVERTISED_PORT: 9092
+  tests:
+    build:
+      context: .
+    environment:
+      KAFKA_HOST: 'gateway.docker.internal'
+    volumes:
+      - ./:/opt/asynckafka
+    depends_on:
+      - kafka
