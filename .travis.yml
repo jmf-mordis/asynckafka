@@ -32,3 +32,4 @@ deploy:
       secure: "VmFZyjCsVkq7E3uujQ25/dLL5fKPH75f9NB/2LUa76MJlnU9Zf+/7rXr/uG13EYSosss8OObpDrTKIVhVRm7lGJHQuPmoSdk6U7YR0sYkgbClyj6+4tM3a9JrWjB0F2yXX+WeLI7nzVlqExuFUs/PHmt2Ko04IyzPeGIsw0x5Br3jTnp5LalWrhJnBhj0U9qf67zXkNVwbYpliIzBIS6BiLnWuZoHSaybwt3YZxEY+27Mq/drSpy60cDJpwz8fNN2b80IZ+t14gEvLnjdGa8T2/eJFHwf8JJ+IYzuRJnC3o3CoANxbaLgTr8zrujNJtRU6l4tGsCRR91Ox6MbhCrXRXn+uCguh4tLPMR+IbiERWN7k45YQR/LgPkKO0M5b+rcqFmD7UXovD/kFjIcjOgPi92WrGSEK/EO3b/9wB5wILIH6orVaIbmi+7aJNKi5u8pouJSOgaff6m8D2HThDfJDoMkmZgjJha0fHPEIjxa6qzTySV9uF4lqD3umf+DHZK+aeKLGvbvzi/lfxch/CcW8thnQlPo8Iqbny1PANf2xcPIJEPq2F1KUMH/u2pulL0IbHahlrSwX8KdjCNeNr4us3P4y8nc2N8/2P02lGO8cVciw+YIxLTn0gFOcsb8deVy935ZKBsfvYtpmpUtxcFVOrRfAbrZyJTAvr66Y23ScQ="
     on:
       branch: master
+      condition: $TRAVIS_TAG = documentation
