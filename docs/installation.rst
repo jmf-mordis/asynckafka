@@ -1,14 +1,14 @@
 Requirements
 ============
 
-#. Python 3.6 or 3.7
+#. Python 3.6+
 #. GCC
 #. Rdkafka >= 0.11
 
 Install rdkafka from source
 ---------------------------
 
-You need the Rdkafka_ headers to be able to compile asynckafka, download
+Rdkafka_ headers are required to compile asynckafka, download
 rdkafka from here_, then unpack the package and run::
 
     ./configure
@@ -18,7 +18,9 @@ rdkafka from here_, then unpack the package and run::
 .. _here: https://github.com/edenhill/librdkafka/releases
 .. _Rdkafka: https://github.com/edenhill/librdkafka
 
-Some package managers have a package with the rdkafka headers. For example in Ubuntu 18.04::
+Most of package managers have a package with the rdkafka headers.
+
+Ubuntu 18.04::
 
     apt-get install librdkafka-dev
 
@@ -26,11 +28,13 @@ For the MacOS users with Homebrew, the rdkafka headers already comes with the li
 
     brew install librdkafka
 
+For more information go to the librdkafka repository.
+
 Install asynckafka package
 --------------------------
 
-You also are going to need gcc to be able to compile the Cython package.
+A C compiler is also required, the Cython package is compiled from source when asynckafka is installed with pip.
 
-The package is in Pypi, you can install it with pip::
+The installation of the package is done as a regular Pypi package::
 
     $ pip install asynckafka

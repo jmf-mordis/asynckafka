@@ -19,13 +19,11 @@ Features
 ========
 
 * Consumer using a balanced group
+* Consumer using custom topic partitions and offset
 * Producer
 
-The library was born as a project to learn Cython, right now it only has the basic
-features implemented, some of the most important missing features are:
-
-* Offset management in the consumer
-* Precise partition management
+The library was born as a project to learn Cython and and has not been actively maintained in the last years,
+Therefore it should be used with caution.
 
 Examples
 ========
@@ -75,5 +73,5 @@ Consumption
 .. image:: https://github.com/jmf-mordis/asynckafka/raw/master/docs/benchmark/graphs/consumer.png
    :width: 800
 
-The benchmark used for asynckafka is in benchmark directory while the
-benchmark used for aiokafka is in its own repository, also in the benchmark folder.
+The asynckafka benchmark can be found in the benchmark directory while the
+benchmark used for aiokafka can be found in its own repository.

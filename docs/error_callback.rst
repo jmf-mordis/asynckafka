@@ -1,8 +1,8 @@
 Error callback
 ==============
 
-The error callback can be passed to the consumer of producer, it should be a
-coroutine function and accepts one parameter that it is a KafkaError.
+The error callback can be used in the consumer or producer. The callback can be function or a coroutine that
+accepts the kafka_error parameter.
 
 Example::
 

@@ -1,8 +1,8 @@
 RdKafka configuration
 =====================
 
-This library is built on top of rdkafka, and as wrapper it uses the same
-configuration that it. The rdkafka configuration is very extensive and can
+This library is built on top of rdkafka. As wrapper it uses the same
+configuration than it. The rdkafka configuration is very extensive and can
 be found in the following link:
 
 https://github.com/edenhill/librdkafka/blob/v0.11.3/CONFIGURATION.md
@@ -40,4 +40,4 @@ Producer configuration, example::
     )
 
 If you are looking to use this library, you should carefully read the configuration of
-rdkafka in its different sections, because in the end this library is a wrapper of rdkafka.
+rdkafka.
